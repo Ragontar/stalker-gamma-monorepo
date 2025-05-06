@@ -1,0 +1,67 @@
+--[[
+	@ Name: (Revised) Ammo Maker
+	@ Author: Singustromo
+--]]
+
+parent = ammo_maker
+
+-- If you don't use MCM, change your defaults from here.
+defaults = {
+	["salvage_preset"] = "dynamic",		-- low|normal|high|dynamic (progression difficulty)
+	["tool_degradation"] = 4,
+	["powder_bonus"] = 1.12,		-- 1 to deactivate
+	["rate_bad"] = 0.4,			-- salvage rate for old ammunition
+	["force_injection"] = false,
+	["inject_bad_variants"] = false,	-- addons using ammo*_bad for recipes
+	["debug"] = false,			-- debug messages
+	["show_news"] = true,			-- pda notification
+}
+
+function injector_exists()
+	return (parent.recipe_injector ~= nil)
+end
+
+local clr_title = {255, 255, 255, 0}
+local clr_desc = {200, 200, 255, 200}
+local clr_notice = {255, 232, 61, 102}
+
+function on_mcm_load()
+	if not parent then return end
+
+	op = { id= "ram", sh=true, gr={
+			{id = "title", type="slide", link="ui_options_slider_gameplay_diff", text="ui_mcm_menu_ram_title", size={512,50}, spacing=20},
+			{id = "salvage_preset",			type="list", val=0, def=defaults["salvage_preset"],
+				content={
+					{"low", "ram_preset_low"},
+					{"normal", "ram_preset_normal"},
+					{"high", "ram_preset_high"},
+					{"dynamic", "ram_preset_dynamic"},
+				},
+			},
+			{id = "tool_degradation",		type="track", val=2, min=1, max=10, step=0.5, def=defaults["tool_degradation"]},
+			{id = "powder_bonus",			type="track", val=2, min=1, max=1.3, step=0.01, def=defaults["powder_bonus"]},
+			{id = "rate_bad",			type="track", val=2, min=0, max=1, step=0.1, def=defaults["rate_bad"]},
+			{id = "show_news",			type="check", val=1, def=defaults["show_news"]},
+
+			{id = "divider", type = "line", precondition={injector_exists}},
+			{id = "header", type = "desc", text = "ui_mcm_ram_title_injection", clr=clr_title, precondition={injector_exists}},
+			{id = "header", type = "desc", text = "ui_mcm_ram_desc_injection", clr=clr_desc, precondition={injector_exists}},
+			{id = "header", type = "desc", text = "ui_mcm_ram_desc_injection_reload_notice", clr=clr_notice, precondition={injector_exists}},
+			{id = "force_injection",		type="check", val=1, def=defaults["force_injection"], precondition={injector_exists}},
+			{id = "inject_bad_variants",		type="check", val=1, def=defaults["inject_bad_variants"], precondition={injector_exists}},
+
+			{id = "divider", type = "line" },
+			{id = "header", type = "desc", text = "ui_mcm_ram_title_debug", clr=clr_title},
+			{id = "debug",				type="check", val=1, def=defaults["debug"]},
+		},
+	}
+	return op
+end 
+
+function get_value(key)
+	if ui_mcm and type(ui_mcm.get) == 'function' then
+		return ui_mcm.get("ram/" .. key)
+	end
+
+	return defaults[key]
+end

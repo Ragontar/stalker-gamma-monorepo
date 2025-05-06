@@ -1,0 +1,53 @@
+-- A tiny library for picking random values between two numbers by using bézier curves
+-- Rewritten in Lua by Singustromo
+-- Based on and inspired by randomizing_functions from Demonized
+
+-- Usage
+--[[
+	local randomizer = singustromo_bezier_curves
+	local a = randomizer.get_random_value(min, max, {p0, p1, p2, p3, p4})
+--]]
+
+-- Pick a random float between min_cond and max_cond
+-- random value will be picked according to the function graph
+function get_random_value(min_cond, max_cond, params)
+	local min_cond = min_cond or 0
+	local max_cond = max_cond or 1
+	local params = params or {0,0.5,1} -- linear interpolation
+	if type(params) ~= 'table' or #params < 3 then return end
+
+	local rand = 1
+	if #params == 4 then
+		rand = cubic_bezier(math.random(), params)
+	elseif #params == 3 then
+		rand = quadratic_bezier(math.random(), params)
+	end
+	if not rand then return end
+
+	if min_cond > max_cond then
+		max_cond, min_cond = min_cond, max_cond
+	end
+
+	local a = max_cond - min_cond
+	local b = a * rand
+	local c = min_cond + b
+	return c
+end
+
+function quadratic_bezier(x, p)
+	-- linear interpolation: saving compute time
+	if p[1] == 0 and p[2] == 0.5 and p[3] == 1 then	return x end
+
+	return p[1]*(1-x)^2 + 2*p[2]*x*(1-x) + p[3]*x^2 
+end
+
+function cubic_bezier(x, p)
+	if #p < 4 then return end
+
+	-- linear interpolation: saving compute time
+	if p[1] == 0 and p[2] == 1 and p[3] == 0 and p[4] == 1 then
+		return x
+	end
+	
+	return p[1]*(1-x)^3 + 3*p[2]*(1-x)^2*x + 3*p[3]*(1-x)*x^2 + p[4]*x^3
+end
