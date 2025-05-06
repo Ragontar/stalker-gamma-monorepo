@@ -1,0 +1,22 @@
+function on_mcm_load()
+    op = {
+        id = "rvr_storage_system",
+        sh = true,
+        gr = { -- options tree goes here
+        {
+            id = "title1",
+            type = "slide",
+            link = "AMCM_Banner.dds",
+            text = "ui_mcm_example_text",
+            size = {512, 50},
+            spacing = 20
+        }, {
+            id = "value_1",
+            type = "input",
+            val = 2,
+            def = some_value_here
+        }}
+    }
+
+    return op
+end

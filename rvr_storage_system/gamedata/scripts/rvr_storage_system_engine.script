@@ -1,0 +1,41 @@
+function on_game_start()
+    RegisterScriptCallback("actor_on_first_update", init)
+    RegisterScriptCallback("on_key_press", on_key_press)
+    RegisterScriptCallback("save_state", save_state)
+    RegisterScriptCallback("load_state", load_state)
+end
+
+function init()
+    news_manager.send_tip(db.actor, "Reaver Storage System initialized", nil, nil, 30000)
+end
+
+local test_storage_calls = 0
+
+-- Function called when a key is pressed
+function on_key_press(dik)
+    -- If the key that was pressed is F
+    if dik == DIK_keys.DIK_O then
+        test_storage_calls = test_storage_calls + 1
+
+        printf("test storage calls: " .. test_storage_calls)
+    end
+end
+
+function save_state(m_data)
+    local rvr_storage_system_data = {
+        test_storage_calls = test_storage_calls
+    }
+
+    m_data.rvr_storage_system_data = rvr_storage_system_data
+end
+
+function load_state(m_data)
+    if not m_data.rvr_storage_system_data then
+        return
+    end
+
+    if m_data.rvr_storage_system_data.test_storage_calls and type(m_data.rvr_storage_system_data.test_storage_calls) == "number" then
+        test_storage_calls = m_data.rvr_storage_system_data.test_storage_calls
+    end
+
+end
