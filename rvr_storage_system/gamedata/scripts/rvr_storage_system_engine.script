@@ -5,19 +5,35 @@ function on_game_start()
     RegisterScriptCallback("load_state", load_state)
 end
 
+local test_storage_calls = 0
+
+GUI = nil
+function get_storage_ui()
+    if (not GUI) then
+        GUI = UIStorage()
+    end
+
+    return GUI
+end
+
 function init()
     news_manager.send_tip(db.actor, "Reaver Storage System initialized", nil, nil, 30000)
 end
 
-local test_storage_calls = 0
-
 -- Function called when a key is pressed
 function on_key_press(dik)
-    -- If the key that was pressed is F
     if dik == DIK_keys.DIK_O then
         test_storage_calls = test_storage_calls + 1
 
         printf("test storage calls: " .. test_storage_calls)
+
+        if get_storage_ui():IsShown() then
+            get_storage_ui():HideDialog()
+
+            return
+        end
+
+        get_storage_ui():ShowDialog(true)
     end
 end
 
@@ -34,8 +50,37 @@ function load_state(m_data)
         return
     end
 
-    if m_data.rvr_storage_system_data.test_storage_calls and type(m_data.rvr_storage_system_data.test_storage_calls) == "number" then
+    if m_data.rvr_storage_system_data.test_storage_calls and type(m_data.rvr_storage_system_data.test_storage_calls) ==
+        "number" then
         test_storage_calls = m_data.rvr_storage_system_data.test_storage_calls
     end
 
+end
+
+class "UIStorage" (ui_inventory.UIInventory)
+
+function UIStorage:__init()
+    super()
+    self:InitControlsExpansion()
+end
+
+function UIStorage:InitControlsExpansion()
+    self:SetWndRect(Frect():set(0, 0, 1024, 768))
+    self:SetAutoDelete(true)
+
+    local xml
+
+    self.xml_rvr_ss = CScriptXmlInit()
+    xml = self.xml_rvr_ss
+    xml:ParseFile("ui_rvr_storage.xml")
+
+    self.dialog_test_shit = xml:InitStatic("test_shit:frame", self)
+    self.text_counter = xml:InitTextWnd("test_shit:text_counter", self.dialog_test_shit)
+    self.text_counter:SetText("idi nahui, eblan: " .. test_storage_calls)
+
+    self.btn_inc = xml:Init3tButton("test_shit:btn_inc", self.dialog_test_shit)
+    self:Register(self.btn_inc, "button_inc")
+
+    self.btn_dec = xml:Init3tButton("test_shit:btn_dec", self.dialog_test_shit)
+    self:Register(self.btn_dec, "button_dec")
 end

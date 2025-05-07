@@ -8,4 +8,10 @@
     <string id="ui_mcm_example_text">
         <text>Rvr Storage System</text>
     </string>
+    <string id="st_rvr_storage_inc">
+        <text>+</text>
+    </string>
+    <string id="st_rvr_storage_dec">
+        <text>-</text>
+    </string>
 </string_table>
