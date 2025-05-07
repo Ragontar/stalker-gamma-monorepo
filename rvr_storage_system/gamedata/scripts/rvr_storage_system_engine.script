@@ -59,14 +59,14 @@ end
 -- Function called when a key is pressed
 function on_key_press(dik)
     if dik == DIK_keys.DIK_O then
-        test_storage_calls = test_storage_calls + 1
+        -- test_storage_calls = test_storage_calls + 1
 
         printf("test storage calls: " .. test_storage_calls)
         start(mode_bank, nil)
     end
 end
 
-function save_state(m_data)
+function save_state(m_data) -- todo save stashes
     local rvr_storage_system_data = {
         test_storage_calls = test_storage_calls
     }
@@ -74,7 +74,7 @@ function save_state(m_data)
     m_data.rvr_storage_system_data = rvr_storage_system_data
 end
 
-function load_state(m_data)
+function load_state(m_data) -- todo load stashes
     if not m_data.rvr_storage_system_data then
         return
     end
@@ -103,15 +103,15 @@ function UIStorage:InitControlsExpansion()
     xml = self.xml_rvr_ss
     xml:ParseFile("ui_rvr_storage.xml")
 
-    self.dialog_test_shit = xml:InitStatic("test_shit:frame", self)
-    self.text_counter = xml:InitTextWnd("test_shit:text_counter", self.dialog_test_shit)
-    self.text_counter:SetText("idi nahui, eblan: " .. test_storage_calls)
+    -- self.dialog_test_shit = xml:InitStatic("test_shit:frame", self)
+    -- self.text_counter = xml:InitTextWnd("test_shit:text_counter", self.dialog_test_shit)
+    -- self.text_counter:SetText("idi nahui, eblan: " .. test_storage_calls)
 
-    self.btn_inc = xml:Init3tButton("test_shit:btn_inc", self.dialog_test_shit)
-    self:Register(self.btn_inc, "button_inc")
+    -- self.btn_inc = xml:Init3tButton("test_shit:btn_inc", self.dialog_test_shit)
+    -- self:Register(self.btn_inc, "button_inc")
 
-    self.btn_dec = xml:Init3tButton("test_shit:btn_dec", self.dialog_test_shit)
-    self:Register(self.btn_dec, "button_dec")
+    -- self.btn_dec = xml:Init3tButton("test_shit:btn_dec", self.dialog_test_shit)
+    -- self:Register(self.btn_dec, "button_dec")
 end
 
 -- Bank mode
@@ -147,11 +147,82 @@ function UIStorage:Close()
     Unregister_UI("UIStorage")
 end
 
-function UIInventory:InitCallbacksExpansion()
-    self:AddCallback("inc", ui_events.BUTTON_CLICKED, self.Inc, self)
-    self:AddCallback("dec", ui_events.BUTTON_CLICKED, self.Dec, self)
+function UIStorage:InitCallbacksExpansion()
+    -- self:AddCallback("button_inc", ui_events.BUTTON_CLICKED, self.Inc, self)
+    -- self:AddCallback("button_dec", ui_events.BUTTON_CLICKED, self.Dec, self)
 end
 
-function UIInventory:Inc()
+function UIStorage:Inc()
+    test_storage_calls = test_storage_calls + 1
+    self.text_counter:SetText("idi nahui, eblan: " .. test_storage_calls)
+    -- self.update_info = true
+end
 
+function UIStorage:Dec()
+    test_storage_calls = test_storage_calls - 1
+    self.text_counter:SetText("idi nahui, eblan: " .. test_storage_calls)
+    -- self.update_info = true
+end
+
+function UIStorage:Reset(obj)
+    local to_show         = obj and self:IsInvOwner(obj)
+    local mode            = self.mode
+    local mBank           = mode == mode_bank
+
+    -- Info
+    self.npc_id           = obj and obj:id() or false
+    self.npc_is_box       = obj and IsInvbox(obj) or false
+
+    -- Containers
+    self.CC["actor_bag"]:Show(mBank)
+    self.CC["actor_trade"]:Show(false)
+    self.CC["actor_trade_bag"]:Show(false)
+    self.CC["npc_bag"]:Show(mBank)
+    self.CC["npc_trade"]:Show(false)
+    self.CC["npc_trade_bag"]:Show(false)
+    self:Picker_Toggle()
+    self.trash:Show(false)
+
+    -- self.CC["actor_bag"].can_select = false -- mR
+    -- self.CC["actor_equ"].can_select = false
+    -- self.CC["picker"].can_select    = false
+
+    -- for name, cc in pairs(self.CC) do
+    --     cc.trade_profile = nil
+    -- end
+
+    -- Elements
+    self.npc_dialog:Show(mBank)
+    self.npc_up_dialog:Show(false)
+    self.player_trade:Show(false)
+    self.player_putall:Show(mBank)
+    self.npc_takeall:Show(false)
+    self.npc_trade:Show(false)
+    self.npc_money:Show(false)
+    self.npc_weight_max:Show(false)
+
+    self.npc_name:Show(to_show)
+    self.npc_community:Show(to_show)
+    self.npc_icon:Show(to_show)
+    self.npc_up_repair:Enable(false)
+
+    self.item_info:Update()
+    self.upgr_info:Update()
+    self:SetHint(false)
+    if self.item_props:IsShown() then
+        self.item_props:OnHide()
+    end
+
+    -- Reset sorting
+    self.sort_btn[1]:SetCheck(true)
+    self:On_Sort(1, true)
+
+    self.upgr          = { id = false, sec = false, idx = false, bag = false }
+    self.hover         = { idx = false, bag = false, tg = 0 }
+    self.slot_hl       = { idx = false, bag = false }
+    self.holding_ctrl  = false
+    self.holding_shift = false
+
+    -- Allow player movement for this UI
+    self:AllowMovement(false)
 end
