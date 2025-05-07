@@ -5,15 +5,51 @@ function on_game_start()
     RegisterScriptCallback("load_state", load_state)
 end
 
+local weight_unit = game.translate_string("st_kg")
+local snd_open = sound_object([[interface\inv_open]])
+local snd_close = sound_object([[interface\inv_close]])
+local snd_item_to_slot = sound_object([[interface\inv_slot]])
+local snd_item_to_belt = sound_object([[interface\inv_belt]])
+local snd_item_to_ruck = sound_object([[interface\inv_ruck]])
+local snd_properties = sound_object([[interface\inv_properties_2]])
+local snd_drop_item = sound_object([[interface\inv_drop]])
+local snd_attach_addon = sound_object([[interface\inv_attach_addon]])
+local snd_detach_addon = sound_object([[interface\inv_detach_addon]])
+local snd_item_use = sound_object([[interface\inv_none]])
+
 local test_storage_calls = 0
+local mode_bank = "bank"
 
 GUI = nil
-function get_storage_ui()
+
+function start(mode, obj)
+    if (not mode) then
+        printdbg("nil mode received")
+
+        return
+    end
+
+    if mode ~= mode_bank then
+        printdbg("unexpected mode: " .. mode)
+
+        return
+    end
+
     if (not GUI) then
         GUI = UIStorage()
     end
 
-    return GUI
+    if (GUI) and (not GUI:IsShown()) then
+        if mode == mode_bank then
+            -- change_last_mode(1)
+            GUI:BankMode_Init()
+        end
+
+        GUI:ShowDialog(true)
+
+        _GUIs_keyfree["UIStorage"] = true
+        Register_UI("UIStorage", "ui_storage")
+    end
 end
 
 function init()
@@ -26,14 +62,7 @@ function on_key_press(dik)
         test_storage_calls = test_storage_calls + 1
 
         printf("test storage calls: " .. test_storage_calls)
-
-        if get_storage_ui():IsShown() then
-            get_storage_ui():HideDialog()
-
-            return
-        end
-
-        get_storage_ui():ShowDialog(true)
+        start(mode_bank, nil)
     end
 end
 
@@ -54,7 +83,6 @@ function load_state(m_data)
         "number" then
         test_storage_calls = m_data.rvr_storage_system_data.test_storage_calls
     end
-
 end
 
 class "UIStorage" (ui_inventory.UIInventory)
@@ -62,6 +90,7 @@ class "UIStorage" (ui_inventory.UIInventory)
 function UIStorage:__init()
     super()
     self:InitControlsExpansion()
+    self:InitCallbacksExpansion()
 end
 
 function UIStorage:InitControlsExpansion()
@@ -83,4 +112,46 @@ function UIStorage:InitControlsExpansion()
 
     self.btn_dec = xml:Init3tButton("test_shit:btn_dec", self.dialog_test_shit)
     self:Register(self.btn_dec, "button_dec")
+end
+
+-- Bank mode
+function UIStorage:BankMode_Init()
+    self:Print(nil, "BankMode_Init")
+
+    self.mode = mode_bank
+
+    -- Show/Hide needed elements
+    self:Reset()
+
+    -- Update inventories
+    -- self:IMode_ResetInventories()
+
+    -- Update info
+    -- self:UpdateInfo(true)
+
+    -- Sound effect
+    self:PlaySND(snd_open)
+end
+
+function UIStorage:Close()
+    self:Print(nil, "Close")
+
+    -- Sound effect
+    self:PlaySND(snd_close)
+
+    self:HideDialog()
+    self:Show(false)
+
+    -- change_last_mode(0)
+
+    Unregister_UI("UIStorage")
+end
+
+function UIInventory:InitCallbacksExpansion()
+    self:AddCallback("inc", ui_events.BUTTON_CLICKED, self.Inc, self)
+    self:AddCallback("dec", ui_events.BUTTON_CLICKED, self.Dec, self)
+end
+
+function UIInventory:Inc()
+
 end
