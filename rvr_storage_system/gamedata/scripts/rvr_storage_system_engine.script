@@ -192,17 +192,6 @@ function UIStorage:TestBankMode_Init(storage)
     -- self:PlaySND(snd_open)
 
     self:Reset()
-    -- todo render bank content
-    for sec, by_durability in pairs(self.storage:GetContent()) do
-        for durability, item in pairs(by_durability) do
-            local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
-                durability, item.amount)
-
-            self.storage_inv:AddExistingItem(_E)
-
-            _E:SetTextColor(GetARGB(255, 150, 150, 250))
-        end
-    end
 end
 
 function UIStorage:Close()
@@ -217,12 +206,30 @@ function UIStorage:Close()
     Unregister_UI("UIStorage")
 end
 
-function UIStorage:Reset(storage)
+function UIStorage:Reset()
     self:Log("Reset")
-    self:ResetActorInv()
+
+    self.storage_inv:Clear()
+    self.actor_inv:Clear()
+
+    self:RenderActorInv()
+    self:RenderStorageInv()
 end
 
-function UIStorage:ResetActorInv()
+function UIStorage:RenderStorageInv()
+    for sec, by_durability in pairs(self.storage:GetContent()) do
+        for durability, item in pairs(by_durability) do
+            local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
+                durability, item.amount)
+
+            self.storage_inv:AddExistingItem(_E)
+
+            _E:SetTextColor(GetARGB(255, 150, 150, 250))
+        end
+    end
+end
+
+function UIStorage:RenderActorInv()
     local inv = GetInventoryListEntries(db.actor)
 
     for sec, by_sec in pairs(inv) do
