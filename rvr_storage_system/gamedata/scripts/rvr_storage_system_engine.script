@@ -123,13 +123,13 @@ function UIStorage:InitControls()
     self.actor_d_frame = xml:InitFrame("stg_actor_inventory:frame_base", self.actor_d)
     self.actor_d_list  = xml:InitFrame("stg_actor_inventory:frame_list", self.actor_d)
     self.actor_d_cap   = xml:InitStatic("stg_actor_inventory:cap", self.actor_d)
-    self.actor_inv     = xml:InitListBox("stg_actor_inventory:list", self.actor_d)
+    self.actor_inv       = xml:InitListBox("stg_actor_inventory:list", self.actor_d_list)
 
     self.storage_d     = xml:InitStatic("stg_storage_inventory", self)
     self.storage_d_frame = xml:InitFrame("stg_storage_inventory:frame_base", self.storage_d)
     self.storage_d_list  = xml:InitFrame("stg_storage_inventory:frame_list", self.storage_d)
     self.storage_d_cap   = xml:InitStatic("stg_storage_inventory:cap", self.storage_d)
-    self.storage_inv     = xml:InitListBox("stg_storage_inventory:list", self.storage_d)
+    self.storage_inv     = xml:InitListBox("stg_storage_inventory:list", self.storage_d_list)
 
 
     -- self.dialog_test_shit = xml:InitStatic("test_shit:frame", self)
