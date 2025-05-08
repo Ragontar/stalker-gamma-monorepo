@@ -199,6 +199,7 @@ function UIStorage:TestBankMode_Init(storage)
     self:Log("TestBankMode_Init")
     self.mode = mode_test_bank
     self.storage = storage
+    self.multiplier = 1
     -- self:PlaySND(snd_open)
 
     self:Reset()
@@ -278,6 +279,32 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
 
             return
         end
+
+        if dik == DIK_keys.DIK_LSHIFT then
+            self.multiplier = self.multiplier * 5
+
+            return
+        end
+
+        if dik == DIK_keys.DIK_LCONTROL then
+            self.multiplier = self.multiplier * 5
+
+            return
+        end
+    end
+
+    if keyboard_action == ui_events.WINDOW_KEY_RELEASED then
+        if dik == DIK_keys.DIK_LSHIFT then
+            self.multiplier = math.max(self.multiplier / 5, 1)
+
+            return
+        end
+
+        if dik == DIK_keys.DIK_LCONTROL then
+            self.multiplier = math.max(self.multiplier / 5, 1)
+
+            return
+        end
     end
 
     local bind = dik_to_bind(dik)
@@ -296,7 +323,7 @@ function UIStorage:OnStorageItemList()
         return
     end
 
-    local amount = CalculatePutOrGetAmount(pick.section, pick.amount)
+    local amount = math.min(CalculatePutOrGetAmount(pick.section, pick.amount) * self.multiplier, pick.amount)
 
     self.storage:Get(pick.section, pick.durability_text, amount)
     printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
@@ -316,10 +343,9 @@ function UIStorage:OnActorItemList()
         return
     end
 
-    local amount = CalculatePutOrGetAmount(pick.section, pick.amount)
-    -- itms_manager.relocate_item_from_actor(db.actor, nil, pick.section, amount) -- todo hueta in case of ammo/meds
-    RemoveItems(db.actor, pick.section, amount, pick.durability)
-    self.storage:Put(pick.section, pick.durability_text, amount)
+    local amount = CalculatePutOrGetAmount(pick.section, pick.amount) * self.multiplier
+    local absent_amount = RemoveItems(db.actor, pick.section, amount, pick.durability)
+    self.storage:Put(pick.section, pick.durability_text, amount - absent_amount)
     printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
 
     self:Reset()
@@ -623,6 +649,7 @@ function SpawnItem(npc, section, amount, durability)
     --     -- news_manager.relocate_item(actor, "in", section, amount)
 end
 
+-- RemoveItems returns remaining amount, that cannot be removed
 function RemoveItems(npc, section, amount, durability)
     -- todo dura checks
     amount = amount or 1
@@ -674,6 +701,8 @@ function RemoveItems(npc, section, amount, durability)
     else
         npc:iterate_ruck(itr_item, nil)
     end
+
+    return cnt
 end
 
 -- ConvertPercentStrToNum converts "78%" to 0.78
