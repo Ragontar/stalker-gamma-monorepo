@@ -1,8 +1,15 @@
+AddScriptCallback("on_actor_inventory_update_finished")
+AddScriptCallback("on_storage_inventory_update_finished")
+
 function on_game_start()
     RegisterScriptCallback("actor_on_first_update", init)
     RegisterScriptCallback("on_key_press", on_key_press)
+    -- RegisterScriptCallback("on_key_release", on_key_release)
     RegisterScriptCallback("save_state", save_state)
     RegisterScriptCallback("load_state", load_state)
+    RegisterScriptCallback("actor_item_to_ruck", actor_item_to_ruck)
+    RegisterScriptCallback("on_actor_inventory_update_finished", on_actor_inventory_update_finished)
+    RegisterScriptCallback("on_storage_inventory_update_finished", on_storage_inventory_update_finished)
 end
 
 local weight_unit = game.translate_string("st_kg")
@@ -73,12 +80,47 @@ function init()
     InitActiveStorages()
 end
 
+function actor_item_to_ruck()
+    if GUI and GUI:IsShown() then
+        GUI:Reset()
+    end
+end
+
+function on_actor_inventory_update_finished()
+    -- because fokin server objects have delayed unregistration
+    CreateTimeEvent("gui_update_required", "update_storage_gui", 0.1, function()
+        if GUI and GUI:IsShown() then
+            GUI:Reset()
+        end
+    end)
+end
+
+function on_storage_inventory_update_finished(storage)
+    if GUI and GUI:IsShown() then
+        GUI:Reset()
+    end
+end
+
+-- function on_key_release()
+--     if dik == DIK_keys.MOUSE_1 or dik == DIK_keys.MOUSE_2 or dik == DIK_keys.MOUSE_3 then
+--         printf("MOUSE_1 release callback")
+--         if GUI and GUI:IsShown() then
+--             GUI:Reset()
+--         end
+--     end
+-- end
+
 -- Function called when a key is pressed
 function on_key_press(dik)
     if dik == DIK_keys.DIK_O then
         start(mode_test_bank, ActiveStorages["test_bank"])
         -- printf("content=" .. tostring(ActiveStorages["test_bank"]:GetContent()))
     end
+    -- if dik == WINDOW_LBUTTON_UP then
+    --     if GUI and GUI:IsShown() then
+    --         GUI:Reset()
+    --     end
+    -- end
 end
 
 function save_state(m_data) -- todo save stashes
@@ -183,8 +225,8 @@ function UIStorage:InitControls()
 end
 
 function UIStorage:InitCallBacks()
-    self:AddCallback("move_storage_item_db_click", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnStorageItemList, self)
-    self:AddCallback("move_actor_item_db_click", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnActorItemList, self)
+    self:AddCallback("move_storage_item_db_click", ui_events.LIST_ITEM_SELECT, self.OnStorageItemList, self)
+    self:AddCallback("move_actor_item_db_click", ui_events.LIST_ITEM_SELECT, self.OnActorItemList, self)
     self:AddCallback("refresh", ui_events.LIST_ITEM_SELECT, self.Refresh, self)
     -- self:AddCallback("itm_type", ui_events.LIST_ITEM_SELECT, self.OnItemType, self)
     -- self:AddCallback("itm_list", ui_events.LIST_ITEM_SELECT, self.OnItemList, self)
@@ -223,8 +265,14 @@ function UIStorage:Reset()
     self.storage_inv:Clear()
     self.actor_inv:Clear()
 
+    -- self.storage_inv:RemoveAll()
+    -- self.actor_inv:RemoveAll()
+
     self:RenderActorInv()
     self:RenderStorageInv()
+
+    CUIScriptWnd.Update(self)
+    self:Update()
 end
 
 function UIStorage:Refresh()
@@ -307,6 +355,10 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
         end
     end
 
+    if keyboard_action == ui_events.WINDOW_LBUTTON_UP then
+        self:Reset()
+    end
+
     local bind = dik_to_bind(dik)
     if bind == key_bindings.kINVENTORY or bind == key_bindings.kUSE then
         self:Close()
@@ -327,8 +379,6 @@ function UIStorage:OnStorageItemList()
 
     self.storage:Get(pick.section, pick.durability_text, amount)
     printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
-
-    -- local durability = ConvertPercentStrToNum(pick.durability)
 
     SpawnItem(db.actor, pick.section, amount, pick.durability)
 
@@ -403,6 +453,8 @@ function Storage:Put(section, durability, amount)
 
 
     self.Content[section][durability].amount = self.Content[section][durability].amount + amount
+
+    SendScriptCallback("on_storage_inventory_update_finished", self)
 end
 
 -- GetContent returns Content field which is a table[section][durability]{amount}
@@ -419,14 +471,16 @@ function GetInventoryListEntries(npc, all)
 
     for sec, items in pairs(inv) do
         for _, item in pairs(items) do
+            local durability = GetObjectDurability(item)
+
             if list_entries[sec] == nil then
                 list_entries[sec] = {}
             end
-            if list_entries[sec][GetObjectDurability(item)] == nil then
-                list_entries[sec][GetObjectDurability(item)] = {}
+            if list_entries[sec][durability] == nil then
+                list_entries[sec][durability] = {}
             end
 
-            table.insert(list_entries[sec][GetObjectDurability(item)], item)
+            table.insert(list_entries[sec][durability], item)
         end
     end
 
@@ -458,6 +512,7 @@ function GetInventory(npc, all)
     local function iterate(owner, obj)
         sec = obj:section()
         -- kind = SYS_GetParam(0, sec, "kind") or "na"
+        printf("GetInventory: got section: " .. sec)
 
         table.insert(inv, obj)
     end
@@ -633,6 +688,10 @@ function SpawnItem(npc, section, amount, durability)
             ["uses"] = remaining,
             ["ammo"] = remaining
         })
+
+        if npc:id() == AC_ID then
+            SendScriptCallback("on_actor_inventory_update_finished")
+        end
     end
 
     printf("SpawnItem stats(amount, remaining, iterations): " .. amount .. " " .. remaining .. " " .. iterations)
@@ -643,6 +702,9 @@ function SpawnItem(npc, section, amount, durability)
         })
 
         iterations = iterations - 1
+        if npc:id() == AC_ID then
+            SendScriptCallback("on_actor_inventory_update_finished")
+        end
     end
 
     printf("durability=" .. durability)
@@ -666,7 +728,7 @@ function RemoveItems(npc, section, amount, durability)
             local uses = max_uses and obj:get_remaining_uses() or 1
             cnt = cnt - uses
             if (cnt >= 0) then
-                alife_release_id(obj:id())
+                alife_release_id(obj:id(), "released " .. obj:id())
 
                 if (cnt == 0) then
                     keep_itr = false
@@ -676,6 +738,8 @@ function RemoveItems(npc, section, amount, durability)
                 SpawnItem(npc, section, remain, durability)
                 keep_itr = false
             end
+
+            SendScriptCallback("on_actor_inventory_update_finished")
         end
     end
 
@@ -683,7 +747,7 @@ function RemoveItems(npc, section, amount, durability)
         if keep_itr and (obj and obj:section() == section) then
             cnt = cnt - obj:ammo_get_count()
             if (cnt >= 0) then
-                alife_release_id(obj:id())
+                alife_release_id(obj:id(), "released " .. obj:id())
 
                 if (cnt == 0) then
                     keep_itr = false
@@ -693,6 +757,8 @@ function RemoveItems(npc, section, amount, durability)
                 SpawnItem(npc, section, remain, durability)
                 keep_itr = false
             end
+
+            SendScriptCallback("on_actor_inventory_update_finished")
         end
     end
 
