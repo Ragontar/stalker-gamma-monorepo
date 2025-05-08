@@ -106,15 +106,16 @@ function ItemListElement:__init(section, width, name, durability, amount)
 
     super(section, width, height, offset, name, nil, obj_related)
 
-    self.index       = section
-    self.obj_related = obj_related and true or false
+    self.index           = section
+    self.obj_related     = obj_related and true or false
 
-    self.name        = name
-    self.section     = section
-    self.durability  = durability
-    self.amount      = amount
+    self.name            = name
+    self.section         = section
+    self.durability      = ConvertPercentStrToNum(durability)
+    self.durability_text = durability
+    self.amount          = amount
 
-    self.name_f      = self:GetTextItem()
+    self.name_f          = self:GetTextItem()
     self.name_f:SetText(name)
 
     self.durability_f = self:AddTextField(durability, 1)
@@ -170,6 +171,7 @@ function UIStorage:InitControls()
     self.actor_d_cap   = xml:InitStatic("stg_actor_inventory:cap", self.actor_d)
     self.actor_inv     = xml:InitListBox("stg_actor_inventory:list", self.actor_d_list)
     self:Register(self.actor_inv, "move_actor_item_db_click")
+    -- self:Register(self.actor_inv, "refresh")
 
     self.storage_d       = xml:InitStatic("stg_storage_inventory", self)
     self.storage_d_frame = xml:InitFrame("stg_storage_inventory:frame_base", self.storage_d)
@@ -177,11 +179,13 @@ function UIStorage:InitControls()
     self.storage_d_cap   = xml:InitStatic("stg_storage_inventory:cap", self.storage_d)
     self.storage_inv     = xml:InitListBox("stg_storage_inventory:list", self.storage_d_list)
     self:Register(self.storage_inv, "move_storage_item_db_click")
+    -- self:Register(self.storage_inv, "refresh")
 end
 
 function UIStorage:InitCallBacks()
     self:AddCallback("move_storage_item_db_click", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnStorageItemList, self)
     self:AddCallback("move_actor_item_db_click", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnActorItemList, self)
+    self:AddCallback("refresh", ui_events.LIST_ITEM_SELECT, self.Refresh, self)
     -- self:AddCallback("itm_type", ui_events.LIST_ITEM_SELECT, self.OnItemType, self)
     -- self:AddCallback("itm_list", ui_events.LIST_ITEM_SELECT, self.OnItemList, self)
     -- self:AddCallback("button_name", ui_events.BUTTON_CLICKED, self.OnButton_Name, self)
@@ -222,15 +226,25 @@ function UIStorage:Reset()
     self:RenderStorageInv()
 end
 
+function UIStorage:Refresh()
+    self:Log("Refresh")
+    -- todo update counters without reset
+    -- self.storage_inv:Clear()
+    -- self.actor_inv:Clear()
+
+    -- self:RenderActorInv()
+    -- self:RenderStorageInv()
+end
+
 function UIStorage:RenderStorageInv()
     for sec, by_durability in pairs(self.storage:GetContent()) do
         for durability, item in pairs(by_durability) do
-            local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
-                durability, item.amount)
-
-            self.storage_inv:AddExistingItem(_E)
-
-            _E:SetTextColor(GetARGB(255, 150, 150, 250))
+            if item.amount > 0 then
+                local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
+                    durability, item.amount)
+                self.storage_inv:AddExistingItem(_E)
+                _E:SetTextColor(GetARGB(255, 150, 150, 250))
+            end
         end
     end
 end
@@ -240,14 +254,14 @@ function UIStorage:RenderActorInv()
 
     for sec, by_sec in pairs(inv) do
         for durability, by_durability in pairs(by_sec) do
-            local kind = SYS_GetParam(0, sec, "kind") or "na" -- todo unused
+            local amount = CalculateItemsAmount(by_durability)
 
-            local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
-                durability, CalculateItemsAmount(by_durability))
-
-            self.actor_inv:AddExistingItem(_E)
-
-            _E:SetTextColor(GetARGB(255, 150, 150, 250))
+            if amount > 0 then
+                local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
+                    durability, amount)
+                self.actor_inv:AddExistingItem(_E)
+                _E:SetTextColor(GetARGB(255, 150, 150, 250))
+            end
         end
     end
 end
@@ -275,20 +289,37 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
 end
 
 function UIStorage:OnStorageItemList()
+    printf("OnStorageItemList")
+
+    local pick = self.storage_inv:GetSelectedItem()
+    if not pick then
+        return
+    end
+
+    local amount = CalculatePutOrGetAmount(pick.section, pick.amount)
+
+    self.storage:Get(pick.section, pick.durability_text, amount)
+    printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
+
+    -- local durability = ConvertPercentStrToNum(pick.durability)
+
+    SpawnItem(db.actor, pick.section, amount, pick.durability)
+
     self:Reset()
 end
 
 function UIStorage:OnActorItemList()
     printf("OnActorItemList")
-    
+
     local pick = self.actor_inv:GetSelectedItem()
     if not pick then
         return
     end
 
     local amount = CalculatePutOrGetAmount(pick.section, pick.amount)
-    itms_manager.relocate_item_from_actor(db.actor, nil, pick.section, amount)
-    self.storage:Put(pick.section, pick.durability, amount)
+    -- itms_manager.relocate_item_from_actor(db.actor, nil, pick.section, amount) -- todo hueta in case of ammo/meds
+    RemoveItems(db.actor, pick.section, amount, pick.durability)
+    self.storage:Put(pick.section, pick.durability_text, amount)
     printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
 
     self:Reset()
@@ -546,4 +577,114 @@ function CalculatePutOrGetAmount(section, pickAmount)
     local max_uses = IsItem("multiuse", section) or 1
 
     return math.min(max_uses, pickAmount)
+end
+
+function SpawnItem(npc, section, amount, durability)
+    amount = amount or 1
+    local remaining = 0
+    local iterations = amount
+
+    local kind = SYS_GetParam(0, section, "kind") or "na"
+    if kind == "w_ammo" then
+        local box_size = ini_sys:r_u32(section, "box_size")
+        if box_size == 0 then
+            log("!! box_size is 0 for " .. section)
+            return
+        end
+
+        remaining = amount % box_size
+        iterations = math.floor((amount - remaining) / box_size)
+    else
+        local max_uses = IsItem("multiuse", section) or 1
+
+        remaining = amount % max_uses
+        iterations = math.floor((amount - remaining) / max_uses)
+    end
+
+    if remaining ~= 0 then
+        local se_obj = alife_create_item(section, npc, {
+            ["cond"] = durability,
+            ["uses"] = remaining,
+            ["ammo"] = remaining
+        })
+    end
+
+    printf("SpawnItem stats(amount, remaining, iterations): " .. amount .. " " .. remaining .. " " .. iterations)
+
+    while iterations > 0 do
+        local se_obj = alife_create_item(section, npc, {
+            ["cond"] = durability
+        })
+
+        iterations = iterations - 1
+    end
+
+    printf("durability=" .. durability)
+    --     -- news_manager.relocate_item(actor, "in", section, amount)
+end
+
+function RemoveItems(npc, section, amount, durability)
+    -- todo dura checks
+    amount = amount or 1
+
+    local kind = SYS_GetParam(0, section, "kind") or "na"
+    local cnt = amount
+    local max_uses = IsItem("multiuse", section)
+    local keep_itr = true
+
+    local function itr_item(temp, obj)
+        --printf("~relocate_item_from_actor | checked [%s]", obj:section())
+        if keep_itr and (obj and obj:section() == section) then
+            --printf("-relocate_item_from_actor | found needed section [%s]", section)
+            local uses = max_uses and obj:get_remaining_uses() or 1
+            cnt = cnt - uses
+            if (cnt >= 0) then
+                alife_release_id(obj:id())
+
+                if (cnt == 0) then
+                    keep_itr = false
+                end
+            else
+                local remain = -cnt
+                SpawnItem(npc, section, remain, durability)
+                keep_itr = false
+            end
+        end
+    end
+
+    local function itr_ammo(temp, obj)
+        if keep_itr and (obj and obj:section() == section) then
+            cnt = cnt - obj:ammo_get_count()
+            if (cnt >= 0) then
+                alife_release_id(obj:id())
+
+                if (cnt == 0) then
+                    keep_itr = false
+                end
+            else
+                local remain = -cnt
+                SpawnItem(npc, section, remain, durability)
+                keep_itr = false
+            end
+        end
+    end
+
+    if kind == "w_ammo" then
+        npc:iterate_ruck(itr_ammo, nil)
+    else
+        npc:iterate_ruck(itr_item, nil)
+    end
+end
+
+-- ConvertPercentStrToNum converts "78%" to 0.78
+function ConvertPercentStrToNum(durStr)
+    durStr = durStr:gsub("%%$", "")
+    local num = tonumber(durStr)
+    if num == nil then
+        printf("ConvertPercentStrToNum: num is nil")
+
+        return 0
+    end
+
+    return num / 100
 end
