@@ -3,9 +3,9 @@
 		<frame_base x="0" y="0" width="150" height="688" stretch="1">
 			<texture r="0" g="0" b="0" a="150">ui_icons_PDA_tooltips</texture>
 		</frame_base>
-		<!-- <cap x="0" y="0" width="150" height="30" stretch="1">
+		<cap x="0" y="0" width="150" height="30" stretch="1">
 			<text r="250" g="250" b="250" font="letterica18" align="c" vert_align="c">st_ui_dbg_spawn_type</text>
-		</cap> -->
+		</cap>
 		<frame_list x="20" y="30" width="110" height="638" stretch="1">
 			<texture r="150" b="150" g="150">ui_icons_PDA_tooltips</texture>
 		</frame_list>
@@ -14,32 +14,32 @@
 		</list>
 	</stg_category_selector>
 
-	<stg_storage_inventory x="200" y="40" width="200" height="688" stretch="1">
-		<frame_base x="0" y="0" width="200" height="688" stretch="1">
+	<stg_storage_inventory x="32" y="32" width="368" height="544" stretch="1">
+		<frame_base x="0" y="0" width="368" height="544" stretch="1">
 			<texture r="0" g="0" b="0" a="150">ui_icons_PDA_tooltips</texture>
 		</frame_base>
-		<!-- <cap x="0" y="0" width="200" height="30" stretch="1">
+		<cap x="0" y="0" width="200" height="30" stretch="1">
 			<text r="250" g="250" b="250" font="letterica18" align="c" vert_align="c">st_ui_dbg_spawn_list</text>
-		</cap> -->
-		<frame_list x="20" y="30" width="160" height="638" stretch="1">
+		</cap>
+		<frame_list x="20" y="30" width="348" height="524" stretch="1">
 			<texture r="150" b="150" g="150">ui_icons_PDA_tooltips</texture>
 		</frame_list>
-		<list x="25" y="40" width="145" height="618" item_height="22" can_select="1">
+		<list x="25" y="40" width="338" height="514" item_height="22" can_select="1">
 			<font font="letterica16" r="250" g="250" b="150"/>
 		</list>
 	</stg_storage_inventory>
 
-	<stg_actor_inventory x="200" y="40" width="200" height="688" stretch="1">
-		<frame_base x="0" y="0" width="200" height="688" stretch="1">
+	<stg_actor_inventory x="624" y="32" width="368" height="544" stretch="1">
+		<frame_base x="0" y="0" width="368" height="544" stretch="1">
 			<texture r="0" g="0" b="0" a="150">ui_icons_PDA_tooltips</texture>
 		</frame_base>
-		<!-- <cap x="0" y="0" width="200" height="30" stretch="1">
+		<cap x="0" y="0" width="200" height="30" stretch="1">
 			<text r="250" g="250" b="250" font="letterica18" align="c" vert_align="c">st_ui_dbg_spawn_list</text>
-		</cap> -->
-		<frame_list x="20" y="30" width="160" height="638" stretch="1">
+		</cap>
+		<frame_list x="20" y="30" width="348" height="524" stretch="1">
 			<texture r="150" b="150" g="150">ui_icons_PDA_tooltips</texture>
 		</frame_list>
-		<list x="25" y="40" width="145" height="618" item_height="22" can_select="1">
+		<list x="25" y="40" width="338" height="514" item_height="22" can_select="1">
 			<font font="letterica16" r="250" g="250" b="150"/>
 		</list>
 	</stg_actor_inventory>

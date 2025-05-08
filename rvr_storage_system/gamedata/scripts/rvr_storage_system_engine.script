@@ -29,15 +29,9 @@ local mode_mats_container = "mats_container"
 
 GUI = nil
 
-function start(mode, obj)
+function start(mode, storage)
     if (not mode) then
         printdbg("nil mode received")
-
-        return
-    end
-
-    if mode ~= mode_bank then
-        printdbg("unexpected mode: " .. mode)
 
         return
     end
@@ -49,17 +43,21 @@ function start(mode, obj)
     if (GUI) and (not GUI:IsShown()) then
         if mode == mode_bank then
             -- change_last_mode(1)
-            GUI:BankMode_Init(obj)
+            GUI:BankMode_Init(storage)
         elseif mode == mode_test_bank then
-            GUI:TestBankMode_Init(obj)
+            GUI:TestBankMode_Init(storage)
         elseif mode == mode_generic_container then
-            GUI:GenericCMode_Init(obj)
+            GUI:GenericCMode_Init(storage)
         elseif mode == mode_ammo_container then
-            GUI:AmmoCMode_Init(obj)
+            GUI:AmmoCMode_Init(storage)
         elseif mode == mode_med_container then
-            GUI:MedCMode_Init(obj)
+            GUI:MedCMode_Init(storage)
         elseif mode == mode_mats_container then
-            GUI:MatsCMode_Init(obj)
+            GUI:MatsCMode_Init(storage)
+        else
+            print("unexpected mode")
+
+            return
         end
 
         GUI:ShowDialog(true)
@@ -79,7 +77,7 @@ function on_key_press(dik)
         -- test_storage_calls = test_storage_calls + 1
 
         printf("test storage calls: " .. test_storage_calls)
-        start(mode_bank, db.actor) -- todo add test object
+        start(mode_test_bank,   nil) -- todo add test object
     end
 end
 
@@ -105,21 +103,34 @@ end
 class "UIStorage" (CUIScriptWnd)
 
 function UIStorage:__init()
-    -- super()
-    self.mode = mode_bank
+    super()
+    self.mode = mode_test_bank
     self:InitControls()
-    -- self:InitCallbacksExpansion()
+end
+
+function UIStorage:__finalize()
 end
 
 function UIStorage:InitControls()
     self:SetWndRect(Frect():set(0, 0, 1024, 768))
-    self:SetAutoDelete(true)
+    -- self:SetAutoDelete(true)
 
-    local xml
-
-    self.xml_rvr_ss = CScriptXmlInit()
-    xml = self.xml_rvr_ss
+    self.xml = CScriptXmlInit()
+    local xml = self.xml
     xml:ParseFile("ui_rvr_storage.xml")
+
+    self.actor_d       = xml:InitStatic("stg_actor_inventory", self)
+    self.actor_d_frame = xml:InitFrame("stg_actor_inventory:frame_base", self.actor_d)
+    self.actor_d_list  = xml:InitFrame("stg_actor_inventory:frame_list", self.actor_d)
+    self.actor_d_cap   = xml:InitStatic("stg_actor_inventory:cap", self.actor_d)
+    self.actor_inv     = xml:InitListBox("stg_actor_inventory:list", self.actor_d)
+
+    self.storage_d     = xml:InitStatic("stg_storage_inventory", self)
+    self.storage_d_frame = xml:InitFrame("stg_storage_inventory:frame_base", self.storage_d)
+    self.storage_d_list  = xml:InitFrame("stg_storage_inventory:frame_list", self.storage_d)
+    self.storage_d_cap   = xml:InitStatic("stg_storage_inventory:cap", self.storage_d)
+    self.storage_inv     = xml:InitListBox("stg_storage_inventory:list", self.storage_d)
+
 
     -- self.dialog_test_shit = xml:InitStatic("test_shit:frame", self)
     -- self.text_counter = xml:InitTextWnd("test_shit:text_counter", self.dialog_test_shit)
@@ -133,36 +144,17 @@ function UIStorage:InitControls()
 end
 
 -- Test bank mode
-function UIStorage:TestBankMode_Init()
-    self:Print(nil, "TestBankMode_Init")
+function UIStorage:TestBankMode_Init(storage)
+    self:Log("TestBankMode_Init")
     self.mode = mode_test_bank
-    
-end
-
--- Bank mode
-function UIStorage:BankMode_Init(obj)
-    self:Print(nil, "BankMode_Init")
-
-    self.mode = mode_bank
-
-    -- Show/Hide needed elements
-    self:Reset(obj)
-
-    -- Update inventories
-    self:BankMode_ResetInventories()
-
-    -- Update info
-    -- self:UpdateInfo(true)
-
-    -- Sound effect
-    self:PlaySND(snd_open)
+    -- self:PlaySND(snd_open)
 end
 
 function UIStorage:Close()
-    self:Print(nil, "Close")
+    self:Log("Close")
 
     -- Sound effect
-    self:PlaySND(snd_close)
+    -- self:PlaySND(snd_close)
 
     self:HideDialog()
     self:Show(false)
@@ -170,4 +162,13 @@ function UIStorage:Close()
     -- change_last_mode(0)
 
     Unregister_UI("UIStorage")
+end
+
+function UIStorage:Reset(storage)
+    self:Log("Reset")
+end
+
+function UIStorage:Log(msg)
+    print("mode=" .. (self.mode or "undefined"))
+    print(msg)
 end
