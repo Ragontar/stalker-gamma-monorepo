@@ -18,7 +18,14 @@ local snd_detach_addon = sound_object([[interface\inv_detach_addon]])
 local snd_item_use = sound_object([[interface\inv_none]])
 
 local test_storage_calls = 0
+
 local mode_bank = "bank"
+local mode_test_bank = "test_bank"
+local mode_generic_container = "generic_container"
+local mode_ammo_container = "ammo_container"
+local mode_med_container = "med_container"
+local mode_mats_container = "mats_container"
+-- possible variants: artifacts, w/a parts (has durability, seems bad)
 
 GUI = nil
 
@@ -42,7 +49,17 @@ function start(mode, obj)
     if (GUI) and (not GUI:IsShown()) then
         if mode == mode_bank then
             -- change_last_mode(1)
-            GUI:BankMode_Init()
+            GUI:BankMode_Init(obj)
+        elseif mode == mode_test_bank then
+            GUI:TestBankMode_Init(obj)
+        elseif mode == mode_generic_container then
+            GUI:GenericCMode_Init(obj)
+        elseif mode == mode_ammo_container then
+            GUI:AmmoCMode_Init(obj)
+        elseif mode == mode_med_container then
+            GUI:MedCMode_Init(obj)
+        elseif mode == mode_mats_container then
+            GUI:MatsCMode_Init(obj)
         end
 
         GUI:ShowDialog(true)
@@ -62,7 +79,7 @@ function on_key_press(dik)
         -- test_storage_calls = test_storage_calls + 1
 
         printf("test storage calls: " .. test_storage_calls)
-        start(mode_bank, nil)
+        start(mode_bank, db.actor) -- todo add test object
     end
 end
 
@@ -85,15 +102,16 @@ function load_state(m_data) -- todo load stashes
     end
 end
 
-class "UIStorage" (ui_inventory.UIInventory)
+class "UIStorage" (CUIScriptWnd)
 
 function UIStorage:__init()
-    super()
-    self:InitControlsExpansion()
-    self:InitCallbacksExpansion()
+    -- super()
+    self.mode = mode_bank
+    self:InitControls()
+    -- self:InitCallbacksExpansion()
 end
 
-function UIStorage:InitControlsExpansion()
+function UIStorage:InitControls()
     self:SetWndRect(Frect():set(0, 0, 1024, 768))
     self:SetAutoDelete(true)
 
@@ -114,17 +132,24 @@ function UIStorage:InitControlsExpansion()
     -- self:Register(self.btn_dec, "button_dec")
 end
 
+-- Test bank mode
+function UIStorage:TestBankMode_Init()
+    self:Print(nil, "TestBankMode_Init")
+    self.mode = mode_test_bank
+    
+end
+
 -- Bank mode
-function UIStorage:BankMode_Init()
+function UIStorage:BankMode_Init(obj)
     self:Print(nil, "BankMode_Init")
 
     self.mode = mode_bank
 
     -- Show/Hide needed elements
-    self:Reset()
+    self:Reset(obj)
 
     -- Update inventories
-    -- self:IMode_ResetInventories()
+    self:BankMode_ResetInventories()
 
     -- Update info
     -- self:UpdateInfo(true)
@@ -145,84 +170,4 @@ function UIStorage:Close()
     -- change_last_mode(0)
 
     Unregister_UI("UIStorage")
-end
-
-function UIStorage:InitCallbacksExpansion()
-    -- self:AddCallback("button_inc", ui_events.BUTTON_CLICKED, self.Inc, self)
-    -- self:AddCallback("button_dec", ui_events.BUTTON_CLICKED, self.Dec, self)
-end
-
-function UIStorage:Inc()
-    test_storage_calls = test_storage_calls + 1
-    self.text_counter:SetText("idi nahui, eblan: " .. test_storage_calls)
-    -- self.update_info = true
-end
-
-function UIStorage:Dec()
-    test_storage_calls = test_storage_calls - 1
-    self.text_counter:SetText("idi nahui, eblan: " .. test_storage_calls)
-    -- self.update_info = true
-end
-
-function UIStorage:Reset(obj)
-    local to_show         = obj and self:IsInvOwner(obj)
-    local mode            = self.mode
-    local mBank           = mode == mode_bank
-
-    -- Info
-    self.npc_id           = obj and obj:id() or false
-    self.npc_is_box       = obj and IsInvbox(obj) or false
-
-    -- Containers
-    self.CC["actor_bag"]:Show(mBank)
-    self.CC["actor_trade"]:Show(false)
-    self.CC["actor_trade_bag"]:Show(false)
-    self.CC["npc_bag"]:Show(mBank)
-    self.CC["npc_trade"]:Show(false)
-    self.CC["npc_trade_bag"]:Show(false)
-    self:Picker_Toggle()
-    self.trash:Show(false)
-
-    -- self.CC["actor_bag"].can_select = false -- mR
-    -- self.CC["actor_equ"].can_select = false
-    -- self.CC["picker"].can_select    = false
-
-    -- for name, cc in pairs(self.CC) do
-    --     cc.trade_profile = nil
-    -- end
-
-    -- Elements
-    self.npc_dialog:Show(mBank)
-    self.npc_up_dialog:Show(false)
-    self.player_trade:Show(false)
-    self.player_putall:Show(mBank)
-    self.npc_takeall:Show(false)
-    self.npc_trade:Show(false)
-    self.npc_money:Show(false)
-    self.npc_weight_max:Show(false)
-
-    self.npc_name:Show(to_show)
-    self.npc_community:Show(to_show)
-    self.npc_icon:Show(to_show)
-    self.npc_up_repair:Enable(false)
-
-    self.item_info:Update()
-    self.upgr_info:Update()
-    self:SetHint(false)
-    if self.item_props:IsShown() then
-        self.item_props:OnHide()
-    end
-
-    -- Reset sorting
-    self.sort_btn[1]:SetCheck(true)
-    self:On_Sort(1, true)
-
-    self.upgr          = { id = false, sec = false, idx = false, bag = false }
-    self.hover         = { idx = false, bag = false, tg = 0 }
-    self.slot_hl       = { idx = false, bag = false }
-    self.holding_ctrl  = false
-    self.holding_shift = false
-
-    -- Allow player movement for this UI
-    self:AllowMovement(false)
 end
