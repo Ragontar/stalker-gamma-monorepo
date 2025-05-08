@@ -209,6 +209,8 @@ function UIStorage:ResetActorInv()
 
     for sec, by_sec in pairs(inv) do
         for durability, by_durability in pairs(by_sec) do
+            local kind = SYS_GetParam(0, sec, "kind") or "na" -- todo unused
+
             local _E = ItemListElement(GetObjectName(sec), self.actor_inv:GetWidth(), GetObjectName(sec),
                 durability, CalculateItemsAmount(by_durability))
 
@@ -334,6 +336,12 @@ end
 
 -- GetObjectName returns localized object name by section. Parameter - string, section.
 function GetObjectName(section)
+    local inv_name = ui_item.get_sec_name(section)
+
+    if inv_name ~= "" then
+        return inv_name
+    end
+    
     return section
 end
 
