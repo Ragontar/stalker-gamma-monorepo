@@ -24,7 +24,7 @@
 		<frame_list x="10" y="20" width="348" height="514" stretch="1">
 			<texture r="150" b="150" g="150">ui_icons_PDA_tooltips</texture>
 		</frame_list>
-		<list x="15" y="30" width="338" height="509" item_height="22" can_select="1">
+		<list x="5" y="5" width="338" height="504" item_height="22" can_select="1">
 			<font font="letterica16" r="250" g="250" b="150"/>
 		</list>
 	</stg_storage_inventory>
@@ -39,7 +39,7 @@
 		<frame_list x="10" y="20" width="348" height="514" stretch="1">
 			<texture r="150" b="150" g="150">ui_icons_PDA_tooltips</texture>
 		</frame_list>
-		<list x="15" y="30" width="338" height="509" item_height="22" can_select="1">
+		<list x="5" y="5" width="338" height="504" item_height="22" can_select="1">
 			<font font="letterica16" r="250" g="250" b="150"/>
 		</list>
 	</stg_actor_inventory>
