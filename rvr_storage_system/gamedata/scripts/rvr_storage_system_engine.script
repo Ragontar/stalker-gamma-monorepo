@@ -100,26 +100,31 @@ end
 -----------------------------------------------------------------
 class "ItemListElement" (CUIListBoxItem)
 
-function ItemListElement:__init(index, width, name, durability, amount)
+function ItemListElement:__init(section, width, name, durability, amount)
     local height = 22
     local offset = 5
 
-    super(index, width, height, offset, name, nil, obj_related)
+    super(section, width, height, offset, name, nil, obj_related)
 
-    self.index       = index
+    self.index       = section
     self.obj_related = obj_related and true or false
 
-    self.name        = self:GetTextItem()
-    self.name:SetText(name)
+    self.name        = name
+    self.section     = section
+    self.durability  = durability
+    self.amount      = amount
 
-    self.durability = self:AddTextField(durability, 1)
-    self.durability:SetText(durability)
+    self.name_f      = self:GetTextItem()
+    self.name_f:SetText(name)
+
+    self.durability_f = self:AddTextField(durability, 1)
+    self.durability_f:SetText(durability)
     -- self.durability:SetWndSize(vector2():set((txt_2 and (width - 40) or width), height))
-    self.durability:SetWndPos(vector2():set(width - 100, 0))
+    self.durability_f:SetWndPos(vector2():set(width - 100, 0))
 
-    self.amount = self:AddTextField(amount, 2)
-    self.amount:SetText(amount)
-    self.amount:SetWndPos(vector2():set(width - 50, 0))
+    self.amount_f = self:AddTextField(amount, 2)
+    self.amount_f:SetText(amount)
+    self.amount_f:SetWndPos(vector2():set(width - 50, 0))
 
     -- self.text        = self:GetTextItem()
     -- self.text:SetWndRect(Frect():set(0, 0, width, height))
@@ -145,6 +150,7 @@ function UIStorage:__init()
     super()
     self.mode = mode_test_bank
     self:InitControls()
+    self:InitCallBacks()
 end
 
 function UIStorage:__finalize()
@@ -269,11 +275,23 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
 end
 
 function UIStorage:OnStorageItemList()
-
+    self:Reset()
 end
 
 function UIStorage:OnActorItemList()
+    printf("OnActorItemList")
+    
+    local pick = self.actor_inv:GetSelectedItem()
+    if not pick then
+        return
+    end
 
+    local amount = CalculatePutOrGetAmount(pick.section, pick.amount)
+    itms_manager.relocate_item_from_actor(db.actor, nil, pick.section, amount)
+    self.storage:Put(pick.section, pick.durability, amount)
+    printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
+
+    self:Reset()
 end
 
 function UIStorage:Log(msg)
@@ -322,7 +340,7 @@ function Storage:Put(section, durability, amount)
     end
     if self.Content[section][durability] == nil then
         self.Content[section][durability] = {
-            amount = amount
+            amount = 0
         }
     end
 
@@ -511,6 +529,21 @@ function InitActiveStorages()
             content = storage.content
         })
 
-        printf("initialized ActiveStorage id=" .. tostring(storage.id) .. " val=" .. tostring(ActiveStorages[storage.id]:GetContent()))
+        printf("initialized ActiveStorage id=" ..
+            tostring(storage.id) .. " val=" .. tostring(ActiveStorages[storage.id]:GetContent()))
     end
+end
+
+function CalculatePutOrGetAmount(section, pickAmount)
+    local kind = SYS_GetParam(0, section, "kind") or "na"
+
+    if kind == "w_ammo" then
+        local num_in_box = ini_sys:r_u32(section, "box_size")
+
+        return math.min(num_in_box, pickAmount)
+    end
+
+    local max_uses = IsItem("multiuse", section) or 1
+
+    return math.min(max_uses, pickAmount)
 end
