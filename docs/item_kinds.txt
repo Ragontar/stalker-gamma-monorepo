@@ -39,3 +39,124 @@ i_mutant_part       = 10
 i_misc              = 11
 i_upgrade           = 12
 i_part              = 13
+
+
+From spawner:
+local itm_to_spawn_classes = {
+		-- kind
+		["i_arty_junk"]     	= "Artefacts",
+		["i_arty"]     	        = "Artefacts",
+		["ARTEFACT"]            = "Artefacts",
+		["SCRPTART"]            = "Artefacts",
+
+		["i_arty_cont"]         = "Artefacts (Container)",
+
+		["i_mutant_cooked"]    	= "Items (Food)",
+		["i_mutant_raw"]    	= "Items (Food)",
+		["i_food"]    	        = "Items (Food)",
+		["II_FOOD"]             = "Items (Food)",
+		["S_FOOD"]              = "Items (Food)",
+
+		["i_drink"]    	        = "Items (Drink)",
+		["II_BOTTL"]            = "Items (Drink)",
+
+		["i_medical"]    	    = "Items (Medical)",
+		["II_BANDG"]            = "Items (Medical)",
+		["II_MEDKI"]            = "Items (Medical)",
+		["II_ANTIR"]            = "Items (Medical)",
+
+		["i_device"]            = "Items (Device)",
+		["DET_SIMP"]            = "Items (Device)",
+		["DET_ADVA"]            = "Items (Device)",
+		["DET_ELIT"]            = "Items (Device)",
+		["DET_SCIE"]            = "Items (Device)",
+
+		["i_kit"]               = "Items (Tool)",
+		["i_tool"]              = "Items (Tool)",
+
+		["i_repair"]            = "Items (Repair)",
+
+		["i_part"] 	            = "Items (Parts)",
+
+		["i_mutant_part"]    	= "Items (Misc.)",
+		["i_misc"] 	            = "Items (Misc.)",
+		["II_DOC"]              = "Items (Misc.)",
+		["EQ_PATCH"]            = "Items (Misc.)",
+		["II_ATTCH"]            = "Items (Misc.)",
+		["II_BTTCH"]            = "Items (Misc.)",
+		["D_FLALIT"]            = "Items (Misc.)",
+		["S_PDA"]               = "Items (Misc.)",
+		["D_PDA"]               = "Items (Misc.)",
+
+		["i_letter"]    	    = "Items (Note)",
+
+		["i_quest"]		        = "Items (Quest)",
+
+		["i_upgrade"] 	        = "Items (Upgrades)",
+
+		["o_helmet"]            = "Helmets",
+		["E_HLMET"]             = "Helmets",
+		["EQU_HLMET"]           = "Helmets",
+
+		["i_mutant_belt"]    	= "Outfits (Attachments)",
+		["i_attach"]            = "Outfits (Attachments)",
+		["i_backpack"]          = "Outfits (Attachments)",
+		["EQ_BAKPK"]            = "Outfits (Attachments)",
+
+		["o_light"]             = "Outfits (Light)",
+
+		["E_STLK"]              = "Outfits (Medium)",
+		["EQU_STLK"]            = "Outfits (Medium)",
+		["o_medium"]            = "Outfits (Medium)",
+		["o_sci"]               = "Outfits (Medium)",
+
+		["o_heavy"]             = "Outfits (Heavy)",
+
+		["w_ammo"]              = "Weapons (Ammo)",
+		["AMMO"]                = "Weapons (Ammo)",
+		["AMMO_S"]              = "Weapons (Ammo)",
+		["S_OG7B"]              = "Weapons (Ammo)",
+		["S_VOG25"]             = "Weapons (Ammo)",
+		["S_M209"]              = "Weapons (Ammo)",
+
+		["w_melee"]             = "Weapons (Melee)",
+		["WP_KNIFE"]            = "Weapons (Melee)",
+
+		["w_pistol"]            = "Weapons (Pistol)",
+		["WP_HPSA"]             = "Weapons (Pistol)",
+		["WP_PM"]               = "Weapons (Pistol)",
+		["WP_USP45"]            = "Weapons (Pistol)",
+
+		["w_shotgun"]           = "Weapons (Shotgun)",
+		["WP_ASHTG"]            = "Weapons (Shotgun)",
+		["WP_BM16"]             = "Weapons (Shotgun)",
+
+		["w_smg"]             	= "Weapons (SMG)",
+
+		["w_rifle"]             = "Weapons (Rifle)",
+		["WP_AK74"]             = "Weapons (Rifle)",
+		["WP_GROZA"]            = "Weapons (Rifle)",
+		["WP_LR300"]            = "Weapons (Rifle)",
+		["WP_VAL"]              = "Weapons (Rifle)",
+
+		["w_sniper"]            = "Weapons (Sniper)",
+		["WP_SVD"]              = "Weapons (Sniper)",
+		["WP_SVU"]              = "Weapons (Sniper)",
+
+		["w_explosive"]         = "Weapons (Explosive)",
+		["WP_RG6"]              = "Weapons (Explosive)",
+		["WP_RPG7"]             = "Weapons (Explosive)",
+		["G_F1_S"]              = "Weapons (Explosive)",
+		["G_RGD5_S"]            = "Weapons (Explosive)",
+		["G_F1"] 	            = "Weapons (Explosive)",
+		["G_RGD5"] 	            = "Weapons (Explosive)",
+
+		["w_base"]         		= "Weapons (Misc.)",
+		["w_misc"]              = "Weapons (Misc.)",
+		["WP_SCOPE"]            = "Weapons (Misc.)",
+		["WP_SILEN"]            = "Weapons (Misc.)",
+		["WP_GLAUN"]            = "Weapons (Misc.)",
+		["S_WPN_MISC"]          = "Weapons (Misc.)",
+		["WP_BINOC"]            = "Weapons (Misc.)",
+		["II_BOLT"]             = "Weapons (Misc.)",
+}

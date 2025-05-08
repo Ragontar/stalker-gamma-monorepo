@@ -17,8 +17,6 @@ local snd_attach_addon = sound_object([[interface\inv_attach_addon]])
 local snd_detach_addon = sound_object([[interface\inv_detach_addon]])
 local snd_item_use = sound_object([[interface\inv_none]])
 
-local test_storage_calls = 0
-
 local mode_bank = "bank"
 local mode_test_bank = "test_bank"
 local mode_generic_container = "generic_container"
@@ -27,7 +25,9 @@ local mode_med_container = "med_container"
 local mode_mats_container = "mats_container"
 -- possible variants: artifacts, w/a parts (has durability, seems bad)
 
+RVRData = nil
 GUI = nil
+ActiveStorages = nil
 
 function start(mode, storage)
     if (not mode) then
@@ -69,21 +69,21 @@ end
 
 function init()
     news_manager.send_tip(db.actor, "Reaver Storage System initialized", nil, nil, 30000)
+    InitDefaultStorages()
+    InitActiveStorages()
 end
 
 -- Function called when a key is pressed
 function on_key_press(dik)
     if dik == DIK_keys.DIK_O then
-        -- test_storage_calls = test_storage_calls + 1
-
-        printf("test storage calls: " .. test_storage_calls)
-        start(mode_test_bank, nil) -- todo add test object
+        start(mode_test_bank, ActiveStorages["test_bank"])
+        -- printf("content=" .. tostring(ActiveStorages["test_bank"]:GetContent()))
     end
 end
 
 function save_state(m_data) -- todo save stashes
     local rvr_storage_system_data = {
-        test_storage_calls = test_storage_calls
+        RVRData = RVRData
     }
 
     m_data.rvr_storage_system_data = rvr_storage_system_data
@@ -94,10 +94,7 @@ function load_state(m_data) -- todo load stashes
         return
     end
 
-    if m_data.rvr_storage_system_data.test_storage_calls and type(m_data.rvr_storage_system_data.test_storage_calls) ==
-        "number" then
-        test_storage_calls = m_data.rvr_storage_system_data.test_storage_calls
-    end
+    RVRData = m_data.rvr_storage_system_data.RVRData
 end
 
 -----------------------------------------------------------------
@@ -166,23 +163,46 @@ function UIStorage:InitControls()
     self.actor_d_list  = xml:InitFrame("stg_actor_inventory:frame_list", self.actor_d)
     self.actor_d_cap   = xml:InitStatic("stg_actor_inventory:cap", self.actor_d)
     self.actor_inv     = xml:InitListBox("stg_actor_inventory:list", self.actor_d_list)
-    self:Register(self.actor_inv, "actor_inv")
+    self:Register(self.actor_inv, "move_actor_item_db_click")
 
     self.storage_d       = xml:InitStatic("stg_storage_inventory", self)
     self.storage_d_frame = xml:InitFrame("stg_storage_inventory:frame_base", self.storage_d)
     self.storage_d_list  = xml:InitFrame("stg_storage_inventory:frame_list", self.storage_d)
     self.storage_d_cap   = xml:InitStatic("stg_storage_inventory:cap", self.storage_d)
     self.storage_inv     = xml:InitListBox("stg_storage_inventory:list", self.storage_d_list)
-    self:Register(self.storage_inv, "storage_inv")
+    self:Register(self.storage_inv, "move_storage_item_db_click")
+end
+
+function UIStorage:InitCallBacks()
+    self:AddCallback("move_storage_item_db_click", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnStorageItemList, self)
+    self:AddCallback("move_actor_item_db_click", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnActorItemList, self)
+    -- self:AddCallback("itm_type", ui_events.LIST_ITEM_SELECT, self.OnItemType, self)
+    -- self:AddCallback("itm_list", ui_events.LIST_ITEM_SELECT, self.OnItemList, self)
+    -- self:AddCallback("button_name", ui_events.BUTTON_CLICKED, self.OnButton_Name, self)
+    -- self:AddCallback("check_inv", ui_events.BUTTON_CLICKED, self.OnButton_Inv, self)
+    -- self:AddCallback("check_point", ui_events.BUTTON_CLICKED, self.OnButton_Point, self)
+    -- self:AddCallback("list", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnStartAnim, self)
 end
 
 -- Test bank mode
 function UIStorage:TestBankMode_Init(storage)
     self:Log("TestBankMode_Init")
     self.mode = mode_test_bank
+    self.storage = storage
     -- self:PlaySND(snd_open)
 
     self:Reset()
+    -- todo render bank content
+    for sec, by_durability in pairs(self.storage:GetContent()) do
+        for durability, item in pairs(by_durability) do
+            local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
+                durability, item.amount)
+
+            self.storage_inv:AddExistingItem(_E)
+
+            _E:SetTextColor(GetARGB(255, 150, 150, 250))
+        end
+    end
 end
 
 function UIStorage:Close()
@@ -193,8 +213,6 @@ function UIStorage:Close()
 
     self:HideDialog()
     self:Show(false)
-
-    -- change_last_mode(0)
 
     Unregister_UI("UIStorage")
 end
@@ -211,7 +229,7 @@ function UIStorage:ResetActorInv()
         for durability, by_durability in pairs(by_sec) do
             local kind = SYS_GetParam(0, sec, "kind") or "na" -- todo unused
 
-            local _E = ItemListElement(GetObjectName(sec), self.actor_inv:GetWidth(), GetObjectName(sec),
+            local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
                 durability, CalculateItemsAmount(by_durability))
 
             self.actor_inv:AddExistingItem(_E)
@@ -219,17 +237,6 @@ function UIStorage:ResetActorInv()
             _E:SetTextColor(GetARGB(255, 150, 150, 250))
         end
     end
-
-
-    -- for i, item in ipairs(inv) do
-    --     printf("---------------------------")
-    --     printf(item:id())
-    --     printf(item:name()) -- section+id ???
-    --     printf(item:section())
-
-    --     local kind = SYS_GetParam(0, item:section(), "kind") or "na"
-    --     printf(kind)
-    -- end
 end
 
 function UIStorage:OnKeyboard(dik, keyboard_action)
@@ -254,9 +261,71 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
     end
 end
 
+function UIStorage:OnStorageItemList()
+
+end
+
+function UIStorage:OnActorItemList()
+
+end
+
 function UIStorage:Log(msg)
     printf("mode=" .. (self.mode or "undefined"))
     printf(msg)
+end
+
+----------------------------------------------------------------- Storage
+
+class "Storage"
+
+function Storage:__init(id, weight_limit, content)
+    self.ID = id
+    self.WeightLimit = weight_limit
+    self.Content = content
+end
+
+function Storage:__finalize()
+
+end
+
+-- Get returns {section, durability, amount} on success or nil
+function Storage:Get(section, durability, amount)
+    if self.Content[section] == nil then
+        return
+    end
+    if self.Content[section][durability] == nil then
+        return
+    end
+
+    amount = math.min(amount, self.Content[section][durability].amount)
+
+    self.Content[section][durability].amount = self.Content[section][durability].amount - amount
+
+    return {
+        section = section,
+        durability = durability,
+        amount = amount
+    }
+end
+
+function Storage:Put(section, durability, amount)
+    -- todo check max weight
+    if self.Content[section] == nil then
+        self.Content[section] = {}
+    end
+    if self.Content[section][durability] == nil then
+        self.Content[section][durability] = {
+            amount = amount
+        }
+    end
+
+
+    self.Content[section][durability].amount = self.Content[section][durability].amount + amount
+end
+
+-- GetContent returns Content field which is a table[section][durability]{amount}
+function Storage:GetContent()
+    return self.Content
 end
 
 ----------------------------------------------------------------- utils
@@ -375,4 +444,66 @@ function CalculateItemsAmount(objects)
     end
 
     return amount
+end
+
+function InitDefaultStorages()
+    if RVRData == nil then
+        RVRData = {}
+    end
+
+    if RVRData.Storages == nil then
+        RVRData.Storages = {}
+    end
+
+    if RVRData.Storages["test_bank"] == nil then
+        RVRData.Storages["test_bank"] = {
+            id = "test_bank",
+            mode = mode_test_bank,
+            weight_limit = 0,
+            content = {
+                ["ammo_7.62x51_ap"] = {
+                    ["100%"] = {
+                        amount = 1500000
+                    }
+                },
+                ["medkit_army"] = {
+                    ["100%"] = {
+                        amount = 3000000
+                    }
+                },
+                ["grenade_rgd5"] = {
+                    ["100%"] = {
+                        amount = 3000000
+                    }
+                }
+            }
+        }
+    end
+end
+
+function MakeStorageFromData(mode, params)
+    if mode == mode_test_bank then
+        local st = Storage(params.id, params.weight_limit, params.content)
+
+        return st
+    end
+
+    printf("unknown storage mode: " .. tostring(mode))
+    return
+end
+
+function InitActiveStorages()
+    for id, storage in pairs(RVRData.Storages) do
+        if ActiveStorages == nil then
+            ActiveStorages = {}
+        end
+
+        ActiveStorages[storage.id] = MakeStorageFromData(storage.mode, {
+            id = storage.id,
+            weight_limit = storage.weight_limit,
+            content = storage.content
+        })
+
+        printf("initialized ActiveStorage id=" .. tostring(storage.id) .. " val=" .. tostring(ActiveStorages[storage.id]:GetContent()))
+    end
 end
