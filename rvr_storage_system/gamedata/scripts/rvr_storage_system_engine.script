@@ -55,7 +55,7 @@ function start(mode, storage)
         elseif mode == mode_mats_container then
             GUI:MatsCMode_Init(storage)
         else
-            print("unexpected mode")
+            printf("unexpected mode")
 
             return
         end
@@ -77,7 +77,7 @@ function on_key_press(dik)
         -- test_storage_calls = test_storage_calls + 1
 
         printf("test storage calls: " .. test_storage_calls)
-        start(mode_test_bank,   nil) -- todo add test object
+        start(mode_test_bank, nil) -- todo add test object
     end
 end
 
@@ -123,24 +123,15 @@ function UIStorage:InitControls()
     self.actor_d_frame = xml:InitFrame("stg_actor_inventory:frame_base", self.actor_d)
     self.actor_d_list  = xml:InitFrame("stg_actor_inventory:frame_list", self.actor_d)
     self.actor_d_cap   = xml:InitStatic("stg_actor_inventory:cap", self.actor_d)
-    self.actor_inv       = xml:InitListBox("stg_actor_inventory:list", self.actor_d_list)
+    self.actor_inv     = xml:InitListBox("stg_actor_inventory:list", self.actor_d_list)
+    self:Register(self.actor_inv, "actor_inv")
 
-    self.storage_d     = xml:InitStatic("stg_storage_inventory", self)
+    self.storage_d       = xml:InitStatic("stg_storage_inventory", self)
     self.storage_d_frame = xml:InitFrame("stg_storage_inventory:frame_base", self.storage_d)
     self.storage_d_list  = xml:InitFrame("stg_storage_inventory:frame_list", self.storage_d)
     self.storage_d_cap   = xml:InitStatic("stg_storage_inventory:cap", self.storage_d)
     self.storage_inv     = xml:InitListBox("stg_storage_inventory:list", self.storage_d_list)
-
-
-    -- self.dialog_test_shit = xml:InitStatic("test_shit:frame", self)
-    -- self.text_counter = xml:InitTextWnd("test_shit:text_counter", self.dialog_test_shit)
-    -- self.text_counter:SetText("idi nahui, eblan: " .. test_storage_calls)
-
-    -- self.btn_inc = xml:Init3tButton("test_shit:btn_inc", self.dialog_test_shit)
-    -- self:Register(self.btn_inc, "button_inc")
-
-    -- self.btn_dec = xml:Init3tButton("test_shit:btn_dec", self.dialog_test_shit)
-    -- self:Register(self.btn_dec, "button_dec")
+    self:Register(self.storage_inv, "storage_inv")
 end
 
 -- Test bank mode
@@ -148,6 +139,8 @@ function UIStorage:TestBankMode_Init(storage)
     self:Log("TestBankMode_Init")
     self.mode = mode_test_bank
     -- self:PlaySND(snd_open)
+
+    self:Reset()
 end
 
 function UIStorage:Close()
@@ -166,9 +159,58 @@ end
 
 function UIStorage:Reset(storage)
     self:Log("Reset")
+    self:ResetActorInv()
+end
+
+function UIStorage:ResetActorInv()
+    local inv = self:GetInventory(db.actor)
+
+    self:Log(inv)
+end
+
+function UIStorage:GetInventory(npc, all)
+    local inv = {}
+    local size_c = 0
+    local pkind = self.possible_kind
+    local sec, kind, w, h
+
+    local function iterate(owner, obj)
+        size_c = size_c + 1
+        inv[size_c] = obj
+    end
+
+    if all then
+        npc:iterate_inventory(iterate, nil)
+    else
+        npc:iterate_ruck(iterate, nil)
+    end
+
+    return inv
+end
+
+function UIStorage:OnKeyboard(dik, keyboard_action)
+    local res = CUIScriptWnd.OnKeyboard(self, dik, keyboard_action)
+    if res ~= false then
+        return res
+    end
+
+    if keyboard_action == ui_events.WINDOW_KEY_PRESSED then
+        if dik == DIK_keys.DIK_ESCAPE then
+            self:Close()
+
+            return
+        end
+    end
+
+    local bind = dik_to_bind(dik)
+    if bind == key_bindings.kINVENTORY or bind == key_bindings.kUSE then
+        self:Close()
+
+        return
+    end
 end
 
 function UIStorage:Log(msg)
-    print("mode=" .. (self.mode or "undefined"))
-    print(msg)
+    printf("mode=" .. (self.mode or "undefined"))
+    printf(msg)
 end
