@@ -100,6 +100,48 @@ function load_state(m_data) -- todo load stashes
     end
 end
 
+-----------------------------------------------------------------
+class "ItemListElement" (CUIListBoxItem)
+
+function ItemListElement:__init(index, width, name, durability, amount)
+    local height = 22
+    local offset = 5
+
+    super(index, width, height, offset, name, nil, obj_related)
+
+    self.index       = index
+    self.obj_related = obj_related and true or false
+
+    self.name        = self:GetTextItem()
+    self.name:SetText(name)
+
+    self.durability = self:AddTextField(durability, 1)
+    self.durability:SetText(durability)
+    -- self.durability:SetWndSize(vector2():set((txt_2 and (width - 40) or width), height))
+    self.durability:SetWndPos(vector2():set(width - 100, 0))
+
+    self.amount = self:AddTextField(amount, 2)
+    self.amount:SetText(amount)
+    self.amount:SetWndPos(vector2():set(width - 50, 0))
+
+    -- self.text        = self:GetTextItem()
+    -- self.text:SetWndRect(Frect():set(0, 0, width, height))
+    -- self:SetTextColor(GetARGB(255, 200, 200, 200))
+    -- self.text:SetFont(GetFontLetterica16Russian())
+    -- self.text:SetWndSize(vector2():set((txt_2 and (width - 40) or width), height))
+    -- self.text:SetWndPos(vector2():set(offset, 0))
+    -- self.text:SetEllipsis(true)
+    -- self.text:SetText(txt_1)
+
+
+    -- self.flag = self:AddTextField(str_flag)
+    -- self.flag:SetTextColor(GetARGB(255, 170, 170, 250))
+    -- self.flag:SetFont(GetFontLetterica16Russian())
+    -- self.flag:SetWndSize(vector2():set(40, height))
+    -- self.flag:SetWndPos(vector2():set(width - 40, 0))
+end
+
+-----------------------------------------------------------------
 class "UIStorage" (CUIScriptWnd)
 
 function UIStorage:__init()
@@ -163,29 +205,29 @@ function UIStorage:Reset(storage)
 end
 
 function UIStorage:ResetActorInv()
-    local inv = self:GetInventory(db.actor)
+    local inv = GetInventoryListEntries(db.actor)
 
-    self:Log(inv)
-end
+    for sec, by_sec in pairs(inv) do
+        for durability, by_durability in pairs(by_sec) do
+            local _E = ItemListElement(GetObjectName(sec), self.actor_inv:GetWidth(), GetObjectName(sec),
+                durability, CalculateItemsAmount(by_durability))
 
-function UIStorage:GetInventory(npc, all)
-    local inv = {}
-    local size_c = 0
-    local pkind = self.possible_kind
-    local sec, kind, w, h
+            self.actor_inv:AddExistingItem(_E)
 
-    local function iterate(owner, obj)
-        size_c = size_c + 1
-        inv[size_c] = obj
+            _E:SetTextColor(GetARGB(255, 150, 150, 250))
+        end
     end
 
-    if all then
-        npc:iterate_inventory(iterate, nil)
-    else
-        npc:iterate_ruck(iterate, nil)
-    end
 
-    return inv
+    -- for i, item in ipairs(inv) do
+    --     printf("---------------------------")
+    --     printf(item:id())
+    --     printf(item:name()) -- section+id ???
+    --     printf(item:section())
+
+    --     local kind = SYS_GetParam(0, item:section(), "kind") or "na"
+    --     printf(kind)
+    -- end
 end
 
 function UIStorage:OnKeyboard(dik, keyboard_action)
@@ -213,4 +255,107 @@ end
 function UIStorage:Log(msg)
     printf("mode=" .. (self.mode or "undefined"))
     printf(msg)
+end
+
+----------------------------------------------------------------- utils
+
+-- GetInventoryListEntries returns a list of lists, grouped by section -> durability
+function GetInventoryListEntries(npc, all)
+    local inv = GetInventoryMergedBySection(npc, all)
+    local list_entries = {}
+
+    for sec, items in pairs(inv) do
+        for _, item in pairs(items) do
+            if list_entries[sec] == nil then
+                list_entries[sec] = {}
+            end
+            if list_entries[sec][GetObjectDurability(item)] == nil then
+                list_entries[sec][GetObjectDurability(item)] = {}
+            end
+
+            table.insert(list_entries[sec][GetObjectDurability(item)], item)
+        end
+    end
+
+    return list_entries
+end
+
+function GetInventoryMergedBySection(npc, all)
+    local inv = GetInventory(npc, all)
+    local merged_inv = {}
+
+    for _, item in pairs(inv) do
+        local sec = item:section()
+
+        if merged_inv[sec] == nil then
+            merged_inv[sec] = {}
+        end
+
+        table.insert(merged_inv[sec], item)
+    end
+
+    return merged_inv
+end
+
+function GetInventory(npc, all)
+    local inv = {}
+
+    local sec, kind
+
+    local function iterate(owner, obj)
+        sec = obj:section()
+        -- kind = SYS_GetParam(0, sec, "kind") or "na"
+
+        table.insert(inv, obj)
+    end
+
+    if all then
+        npc:iterate_inventory(iterate, nil)
+    else
+        npc:iterate_ruck(iterate, nil)
+    end
+
+    return inv
+end
+
+function GetObjectDurability(obj)
+    local durability = ""
+
+    if obj then
+        if obj.condition == nil then
+            printf(obj:section() .. " has no condition() method!")
+            return "-1"
+        end
+        durability = tostring(tonumber(math.floor(obj:condition() * 100))) .. "%"
+    end
+
+    return durability
+end
+
+-- GetObjectName returns localized object name by section. Parameter - string, section.
+function GetObjectName(section)
+    return section
+end
+
+-- GetObjectAmount return an amount of items. Ex. for ammo it returns an amount of ammo in the box, for consumables - remaining number of uses.
+--
+-- Type - number
+function GetItemAmount(obj)
+    local amount = 0
+
+    if obj then -- todo
+        amount = 1
+    end
+
+    return amount
+end
+
+function CalculateItemsAmount(objects)
+    local amount = 0
+
+    for _, obj in pairs(objects) do
+        amount = amount + GetItemAmount(obj)
+    end
+
+    return amount
 end
