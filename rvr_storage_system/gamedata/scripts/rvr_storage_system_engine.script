@@ -341,7 +341,7 @@ function GetObjectName(section)
     if inv_name ~= "" then
         return inv_name
     end
-    
+
     return section
 end
 
@@ -349,10 +349,19 @@ end
 --
 -- Type - number
 function GetItemAmount(obj)
-    local amount = 0
+    if not obj then
+        return 1
+    end
 
-    if obj then -- todo
-        amount = 1
+    local kind = SYS_GetParam(0, obj:section(), "kind") or "na"
+
+    if kind == "w_ammo" then
+        return tonumber(obj:ammo_get_count())
+    end
+
+    local amount = 1
+    if obj:get_remaining_uses() > 0 then
+        amount = tonumber(obj:get_remaining_uses())
     end
 
     return amount
