@@ -2,9 +2,6 @@
     <string id="ui_mcm_menu_rvr_storage_system">
         <text>Rvr Storage System</text>
     </string>
-    <string id="ui_mcm_rvr_storage_system_value_1">
-        <text>Some Hueta</text>
-    </string>
     <string id="ui_mcm_example_text">
         <text>Rvr Storage System</text>
     </string>
@@ -14,4 +11,55 @@
     <string id="st_rvr_storage_dec">
         <text>-</text>
     </string>
+
+    <!-- Window titles -->
+    <string id="st_rvr_ss_actor_inventory_title">
+        <text>Backpack</text>
+    </string>
+    <string id="st_rvr_ss_storage_inventory_title">
+        <text>Storage</text>
+    </string>
+    <string id="st_rvr_ss_durability_column_title">
+        <text>Condition</text>
+    </string>
+    <string id="st_rvr_ss_amount_column_title">
+        <text>Amount</text>
+    </string>
+
+
+    <!-- Categories -->
+    <string id="st_c_weapons">
+        <text>Weapons</text>
+    </string>
+    <string id="st_c_ammo">
+        <text>Ammunition</text>
+    </string>
+    <string id="st_c_armor">
+        <text>Armors and helmets</text>
+    </string>
+    <string id="st_c_equipment">
+        <text>Equipment</text>
+    </string>
+    <string id="st_c_tech">
+        <text>Technical</text>
+    </string>
+    <string id="st_c_trophies">
+        <text>Trophies</text>
+    </string>
+    <string id="st_c_consumables">
+        <text>Consumables</text>
+    </string>
+    <string id="st_c_misc">
+        <text>Miscellaneous</text>
+    </string>
+    <string id="st_c_unknown">
+        <text>Unknown</text>
+    </string>
+
+    <!-- <string id="st_c_consumables">
+        <text>-</text>
+    </string>
+    <string id="st_c_consumables">
+        <text>-</text>
+    </string> -->
 </string_table>
