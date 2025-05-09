@@ -1,5 +1,6 @@
 AddScriptCallback("on_actor_inventory_update_finished")
 AddScriptCallback("on_storage_inventory_update_finished")
+AddScriptCallback("rvr_storage_actor_on_stash_create")
 
 function on_game_start()
     RegisterScriptCallback("actor_on_first_update", init)
@@ -9,6 +10,8 @@ function on_game_start()
     RegisterScriptCallback("actor_item_to_ruck", actor_item_to_ruck)
     RegisterScriptCallback("on_actor_inventory_update_finished", on_actor_inventory_update_finished)
     RegisterScriptCallback("on_storage_inventory_update_finished", on_storage_inventory_update_finished)
+    RegisterScriptCallback("rvr_storage_actor_on_stash_create", rvr_storage_actor_on_stash_create)
+    RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
 end
 
 local weight_unit = game.translate_string("st_kg")
@@ -81,7 +84,8 @@ categories = {
 --- Categories end
 -----
 
-function start(mode, storage)
+function start(storage)
+    local mode = storage.Mode
     if (not mode) then
         printdbg("nil mode received")
 
@@ -92,7 +96,7 @@ function start(mode, storage)
         GUI = UIStorage()
     end
 
-    if (GUI) and (not GUI:IsShown()) then
+    if (GUI) and (not GUI:IsShown()) and keybind_pass() then
         if mode == mode_bank then
             -- change_last_mode(1)
             GUI:BankMode_Init(storage)
@@ -153,7 +157,7 @@ end
 -- Function called when a key is pressed
 function on_key_press(dik)
     if dik == DIK_keys.DIK_O then
-        start(mode_test_bank, ActiveStorages["test_bank"])
+        start(ActiveStorages["test_bank"])
     end
 end
 
@@ -305,6 +309,17 @@ function UIStorage:TestBankMode_Init(storage)
     self:Reset()
 end
 
+function UIStorage:GenericCMode_Init(storage)
+    self.mode = mode_generic_container
+    self.storage = storage
+    self.multiplier = 1
+
+    self:LogTr("GenericCMode_Init call")
+    self:Log("storage params: id=%s | weight_limit=%s", tostring(storage:GetID()), tostring(storage:GetWeightLimit()))
+
+    self:Reset()
+end
+
 function UIStorage:Close()
     self:Log("Close")
 
@@ -436,7 +451,9 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
 
     local bind = dik_to_bind(dik)
     if bind == key_bindings.kINVENTORY or bind == key_bindings.kUSE then
-        self:Close()
+        if keybind_pass() then
+            self:Close()
+        end
 
         return
     end
@@ -516,10 +533,11 @@ end
 
 class "Storage"
 
-function Storage:__init(id, weight_limit, content)
+function Storage:__init(id, weight_limit, content, mode)
     self.ID = id
     self.WeightLimit = weight_limit
     self.Content = content
+    self.Mode = mode
 end
 
 function Storage:__finalize()
@@ -937,9 +955,27 @@ function InitDefaultStorages()
     end
 end
 
+-- CreateNewStorage creates new persistent storage. Overrides if exists.
+function CreateNewStorage(mode, params)
+    RVRData.Storages[params.id] = {
+        id = params.id,
+        mode = mode,
+        weight_limit = params.weight_limit,
+        content = params.content
+    }
+
+    return MakeStorageFromData(mode, params)
+end
+
 function MakeStorageFromData(mode, params)
     if mode == mode_test_bank then
-        local st = Storage(params.id, params.weight_limit, params.content)
+        local st = Storage(params.id, params.weight_limit, params.content, mode)
+
+        return st
+    end
+
+    if mode == mode_generic_container then
+        local st = Storage(params.id, params.weight_limit, params.content, mode)
 
         return st
     end
@@ -1163,4 +1199,118 @@ function GetCategoriesOrder()
     end
 
     return order
+end
+
+local K_Timer = false
+
+function keybind_pass()
+    -- I added this to prevent inventory closing after starting because of release keybind
+    if (K_Timer and (time_global() > K_Timer + 200)) or (not K_Timer) then
+        K_Timer = time_global()
+        return true
+    end
+    return false
+end
+
+-----
+--- Create storage callback
+---
+function rvr_storage_actor_on_stash_create(data)
+    log("created enhanced storage: " .. data.stash_id)
+    log("name: " .. data.stash_name)
+    log("section: " .. data.stash_section)
+
+    if ActiveStorages[data.stash_id] then
+        log("stash with id=%s exists, it will be overridden", stash_id)
+    end
+
+    ActiveStorages[data.stash_id] = CreateNewStorage(mode_generic_container, {
+        id = data.stash_id,
+        weight_limit = 0,
+        content = {}
+    })
+end
+
+function physic_object_on_use_callback(obj, who)
+    if not obj or not who then
+        return
+    end
+
+    local stg = ActiveStorages[obj:id()]
+    if who:id() ~= AC_ID or not stg then
+        return
+    end
+
+    log("used adv stash: " .. who:id())
+    log("adv stash id: " .. obj:id())
+
+    CreateTimeEvent("UIStorage", "close_inventory_ui", 0, function()
+        if ui_inventory.GUI then
+            ui_inventory.GUI:Close()
+        end
+
+        start(stg)
+
+        return true
+    end)
+end
+
+-----
+--- Interceptors and monkey patches
+-----
+
+item_backpack_orig_func_stash = item_backpack.func_stash
+item_backpack.func_stash = function(obj)
+    log("create stash handler intercepted")
+
+    item_backpack_orig_func_stash(obj)
+end
+
+orig_UICreateStashOnAccept_callback = item_backpack.UICreateStash.OnAccept
+item_backpack.UICreateStash.OnAccept = function(self, ...)
+    log("UICreateStash.OnAccept intercepted")
+
+    local args = ...
+
+    mb = CUIMessageBoxEx()
+    self:Register(mb, "rvr_storage_mb_set_stash_type")
+
+    mb:InitMessageBox("message_box_yes_no")
+    mb:SetText("st_rvr_ss_mb_set_stash_type_text")
+    mb:ShowDialog(true)
+
+    self:AddCallback("rvr_storage_mb_set_stash_type", ui_events.MESSAGE_BOX_YES_CLICKED, function()
+        log("create stash: mbox: enhanced storage selected")
+        local stash_section = "inv_backpack" -- todo change to new section
+
+
+        local se_obj = alife_create(stash_section, db.actor:position(), db.actor:level_vertex_id(),
+            db.actor:game_vertex_id())
+        if (se_obj) then
+            local txt = self.input:GetText()
+            txt = txt ~= "" and txt or
+                strformat(game.translate_string("st_itm_stash_of_character"), db.actor:character_name())
+
+            level.map_add_object_spot_ser(se_obj.id, "treasure", txt) -- todo maybe del
+            actor_menu.set_msg(1, game.translate_string("st_rvr_ss_mb_set_stash_created"), 4)
+
+            alife_release_id(self.id)
+
+            local data = {
+                stash_id = se_obj.id,
+                stash_name = txt,
+                stash_section = stash_section,
+            }
+
+            SendScriptCallback("rvr_storage_actor_on_stash_create", data)
+        end
+
+        self:Close()
+    end, self)
+
+    self:AddCallback("rvr_storage_mb_set_stash_type", ui_events.MESSAGE_BOX_NO_CLICKED, function()
+        log("create stash: mbox: default storage selected")
+
+        return orig_UICreateStashOnAccept_callback(self, args)
+    end, self)
 end

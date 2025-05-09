@@ -56,6 +56,14 @@
         <text>Unknown</text>
     </string>
 
+
+    <string id="st_rvr_ss_mb_set_stash_created">
+        <text>Advanced stash created</text>
+    </string>
+    <string id="st_rvr_ss_mb_set_stash_type_text">
+        <text>Do you want to create an advanced stash? If no, a default stash will be created.</text>
+    </string>
+
     <!-- <string id="st_c_consumables">
         <text>-</text>
     </string>
