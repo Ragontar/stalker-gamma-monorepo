@@ -43,12 +43,34 @@ SpawnerEventSource = "rvr_spawner_event_source"
 
 cfg = {
     ui_storage_min_reset_period_ms = 100,
-    spawner_durability_set_delay_seconds = 0.1
+    spawner_durability_set_delay_seconds = 0.1,
+
+    lister_item_width = 348 -- should be the same as list_box width
 }
 
 -----------
 --- Config Section end
 -----------
+
+-----
+--- Categories
+-----
+
+categories = {
+    { id = "c_weapons",     display_name = "st_c_weapons",     kinds = { "w_sniper", "w_rifle", "w_smg", "w_shotgun", "w_pistol", "w_melee", "w_misc", "w_base", "w_explosive" } },
+    { id = "c_ammo",        display_name = "st_c_ammo",        kinds = { "w_ammo" } },
+    { id = "c_armor",       display_name = "st_c_armor",       kinds = { "o_heavy", "o_sci", "o_medium", "o_light", "o_helmet" } },
+    { id = "c_equipment",   display_name = "st_c_equipment",   kinds = { "i_backpack", "i_device" } },
+    { id = "c_tech",        display_name = "st_c_tech",        kinds = { "i_tool", "i_repair", "i_part", "i_upgrade", "i_kit" } },
+    { id = "c_trophies",    display_name = "st_c_trophies",    kinds = { "i_arty", "i_arty_junk", "i_arty_cont", "i_mutant_raw", "i_mutant_part", "i_mutant_belt" } },
+    { id = "c_consumables", display_name = "st_c_consumables", kinds = { "i_food", "i_mutant_cooked", "i_drink", "i_medical" } },
+    { id = "c_misc",        display_name = "st_c_misc",        kinds = { "i_letter", "i_quest", "i_misc" } },
+    { id = "c_unknown",     display_name = "st_c_unknown",     kinds = { "unknown" } },
+}
+
+-----
+--- Categories end
+-----
 
 function start(mode, storage)
     if (not mode) then
@@ -145,14 +167,14 @@ end
 -----------------------------------------------------------------
 class "ItemListElement" (CUIListBoxItem)
 
-function ItemListElement:__init(section, width, name, durability, amount)
+function ItemListElement:__init(section, width, name, durability, amount, opts)
     local height = 22
-    local offset = 5
+    -- local offset = 5
+    local opts = opts or {}
 
-    super(section, width, height, offset, name, nil, obj_related)
+    super(section, width)
 
-    self.index           = section
-    self.obj_related     = obj_related and true or false
+    self.inactive        = opts.inactive or false
 
     self.name            = name
     self.section         = section
@@ -161,16 +183,61 @@ function ItemListElement:__init(section, width, name, durability, amount)
     self.amount          = amount
 
     self.name_f          = self:GetTextItem()
+    self.name_f:SetWndRect(Frect():set(0, 0, width, 22))
+    self.name_f:SetWndSize(vector2():set(width - 120, 22))
     self.name_f:SetText(name)
 
-    self.durability_f = self:AddTextField(durability, 1)
-    self.durability_f:SetText(durability)
-    -- self.durability:SetWndSize(vector2():set((txt_2 and (width - 40) or width), height))
-    self.durability_f:SetWndPos(vector2():set(width - 100, 0))
+    if not opts.hide_durability then
+        self.durability_f = self:AddTextField(durability, 1)
+        self.durability_f:SetWndRect(Frect():set(0, 0, 50, 22))
+        self.durability_f:SetWndPos(vector2():set(width - 100, 0))
+        self.durability_f:SetText(durability)
+    end
 
-    self.amount_f = self:AddTextField(amount, 2)
-    self.amount_f:SetText(amount)
-    self.amount_f:SetWndPos(vector2():set(width - 50, 0))
+    if not opts.hide_amount then
+        self.amount_f = self:AddTextField(amount, 2)
+        self.amount_f:SetWndRect(Frect():set(0, 0, 50, 22))
+        self.amount_f:SetWndPos(vector2():set(width - 50, 0))
+        self.amount_f:SetText(amount)
+    end
+end
+
+-----------------------------------------------------------------
+class "ItemListSeparator" (CUIListBoxItem)
+
+function ItemListSeparator:__init(index, title, opts)
+    local height = 22
+    local offset = 5
+    local width = cfg.lister_item_width
+    local opts = opts or {}
+    local line = "_________________________"
+    local text_color = opts.text_color or GetARGB(255, 255, 255, 255)
+
+    super(index, width)
+
+    self.inactive = opts.inactive or true
+
+    self.left_f = self:AddTextField(line, 1)
+    self.left_f:SetText(line)
+    self.left_f:SetTextColor(opts.text_color)
+    self.left_f:SetWndRect(Frect():set(0, 0, width, 22))
+    self.left_f:SetWndPos(vector2():set(0, 0))
+
+    self.title_f = self:AddTextField(title, 2)
+    -- self.title_f:SetEllipsis(true)
+    self.title_f:SetText(title)
+    self.title_f:SetTextColor(opts.text_color)
+    self.title_f:SetWndRect(Frect():set(0, 0, width, 22))
+    self.title_f:SetWndPos(vector2():set(width / 2 - 50, 0))
+
+    self.right_f = self:AddTextField(line, 3)
+    self.right_f:SetText(line)
+    self.right_f:SetTextColor(opts.text_color)
+    self.right_f:SetWndRect(Frect():set(0, 0, width, 22))
+    self.right_f:SetWndPos(vector2():set(width / 2 + 50, 0))
+
+    -- self.title_f = self:GetTextItem()
+    -- self.title_f:SetText(title)
 end
 
 -----------------------------------------------------------------
@@ -254,6 +321,9 @@ function UIStorage:Reset(force)
 
     self:LogTr("Reset call")
 
+    local actor_inv_pos = self.actor_inv:GetCurrentScrollPos()
+    local storage_inv_pos = self.storage_inv:GetCurrentScrollPos()
+
     self.storage_inv:Clear()
     self.actor_inv:Clear()
 
@@ -262,6 +332,9 @@ function UIStorage:Reset(force)
 
     CUIScriptWnd.Update(self)
     self:Update()
+
+    self.actor_inv:SetScrollPos(actor_inv_pos)
+    self.storage_inv:SetScrollPos(storage_inv_pos)
 end
 
 -- Refresh UNIMPLEMENTED update counters without reset.
@@ -271,32 +344,47 @@ function UIStorage:Refresh()
 end
 
 function UIStorage:RenderStorageInv()
-    for sec, by_durability in pairs(self.storage:GetContent()) do
-        for durability, item in pairs(by_durability) do
-            if item.amount > 0 then
-                local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
-                    durability, item.amount)
-                self.storage_inv:AddExistingItem(_E)
-                _E:SetTextColor(GetARGB(255, 150, 150, 250))
-            end
-        end
+    local lister = Lister():FromStorage(self.storage)
+    if not lister then
+        self:LogTr("nil lister")
+
+        return
     end
+
+    local elements = lister:GetListElements()
+
+    self:Render(self.storage_inv, elements)
 end
 
 function UIStorage:RenderActorInv()
     local inv = GetInventoryListEntries(db.actor)
 
-    for sec, by_sec in pairs(inv) do
-        for durability, by_durability in pairs(by_sec) do
-            local amount = CalculateItemsAmount(by_durability)
+    local lister = Lister():FromNPCInv(inv)
+    if not lister then
+        self:LogTr("nil lister")
 
-            if amount > 0 then
-                local _E = ItemListElement(sec, self.actor_inv:GetWidth(), GetObjectName(sec),
-                    durability, amount)
-                self.actor_inv:AddExistingItem(_E)
-                _E:SetTextColor(GetARGB(255, 150, 150, 250))
-            end
-        end
+        return
+    end
+
+    local elements = lister:GetListElements()
+
+    self:Render(self.actor_inv, elements)
+end
+
+function UIStorage:Render(list_box, elements)
+    if not list_box then
+        self:LogTr("error: nil list_box")
+
+        return
+    end
+    if not elements then
+        self:LogTr("error: nil elements")
+
+        return
+    end
+
+    for _, el in pairs(elements) do
+        list_box:AddExistingItem(el)
     end
 end
 
@@ -356,7 +444,7 @@ function UIStorage:OnStorageItemList()
     self:Log("OnStorageItemList call")
 
     local pick = self.storage_inv:GetSelectedItem()
-    if not pick then
+    if not pick or pick.inactive then
         return
     end
 
@@ -374,7 +462,7 @@ function UIStorage:OnActorItemList()
     printf("OnActorItemList")
 
     local pick = self.actor_inv:GetSelectedItem()
-    if not pick then
+    if not pick or pick.inactive then
         return
     end
 
@@ -449,6 +537,7 @@ function Storage:Get(section, durability, amount)
 
     self.Content[section][durability].amount = self.Content[section][durability].amount - amount
 
+    -- todo sort here
     return {
         section = section,
         durability = durability,
@@ -471,6 +560,7 @@ function Storage:Put(section, durability, amount)
     self.Content[section][durability].amount = self.Content[section][durability].amount + amount
 
     SendScriptCallback("on_storage_inventory_update_finished", self)
+    -- todo sort here
 end
 
 function Storage:GetID()
@@ -484,6 +574,165 @@ end
 -- GetContent returns Content field which is a table[section][durability]{amount}
 function Storage:GetContent()
     return self.Content
+end
+
+-----
+--- Lister
+-----
+
+class "Lister"
+
+function Lister:__init()
+    self.ListElements = {}
+end
+
+function Lister:__finalize()
+
+end
+
+function Lister:FromNPCInv(inv)
+    if not inv then
+        return nil
+    end
+
+    for sec, by_sec in pairs(inv) do
+        for durability, by_durability in pairs(by_sec) do
+            local amount = CalculateItemsAmount(by_durability)
+
+            if amount > 0 then
+                local _E = ItemListElement(sec, cfg.lister_item_width, GetObjectName(sec),
+                    durability, amount)
+                _E:SetTextColor(GetARGB(255, 150, 150, 250))
+
+                table.insert(self.ListElements, _E)
+            end
+        end
+    end
+
+    return self
+end
+
+function Lister:FromStorage(storage)
+    if not storage or not storage.GetContent then --todo seems here
+        return nil
+    end
+
+    for sec, by_durability in pairs(storage:GetContent()) do
+        for durability, item in pairs(by_durability) do
+            if item.amount > 0 then
+                local _E = ItemListElement(sec, cfg.lister_item_width, GetObjectName(sec),
+                    durability, item.amount)
+                _E:SetTextColor(GetARGB(255, 150, 150, 250))
+
+                table.insert(self.ListElements, _E)
+            end
+        end
+    end
+
+    return self
+end
+
+-- GetListElements returns ItemListElement table
+function Lister:GetListElements(opts)
+    return self:Sort(self.ListElements, opts)
+end
+
+function Lister:Sort(elements, opts)
+    local result = {}
+    local by_kind = self:GroupByKind(elements, opts)
+    local by_cat_kind = self:GroupByCategory(by_kind, opts)
+    local kind_order = {}
+
+    for _, cat in pairs(GetCategoriesOrder()) do
+        local bk = by_cat_kind[cat]
+        if bk then
+            local name = game.translate_string(cat.display_name) or cat.display_name
+            table.insert(result, self:MakeCategoryElement(name))
+
+            for _, kind in pairs(GetKindsOrder(bk)) do
+                if bk[kind] then
+                    local name = game.translate_string("st_" .. kind) or "st_" .. kind
+                    table.insert(result, self:MakeKindElement(name))
+
+                    for _, el in pairs(bk[kind]) do
+                        table.insert(result, el)
+                    end
+                end
+            end
+        end
+    end
+
+    return result
+end
+
+-- todo maybe "meta" sorting will be required in future
+-- GroupByKind returns table[kind]elements. Elements are sorted by name and durability
+function Lister:GroupByKind(elements, opts)
+    local result = {}
+
+    for _, el in pairs(elements) do
+        local sec = el.section
+        if not sec then
+            log("Lister: undefined section while grouping by kind!")
+            goto continue
+        end
+
+        local kind = SYS_GetParam(0, sec, "kind") or "unknown"
+        result[kind] = result[kind] or {}
+
+        table.insert(result[kind], el)
+
+        ::continue::
+    end
+
+    for kind, els in pairs(result) do
+        table.sort(result[kind], function(e1, e2)
+            if (GetObjectName(e1.section) == GetObjectName(e2.section)) then
+                return (e1.durability_text > e2.durability_text)
+            end
+
+            return (GetObjectName(e1.section) < GetObjectName(e2.section))
+        end)
+    end
+
+    return result
+end
+
+-- GroupByCategory returns table[category][kind]elements. Expects table[kind]
+function Lister:GroupByCategory(grouped_by_kind_elements, opts)
+    local cat_by_kind_index = GetCategoriesByKind()
+    local result = {}
+
+    for kind, els in pairs(grouped_by_kind_elements) do
+        local cat = cat_by_kind_index[kind] or cat_by_kind_index["unknown"]
+
+        result[cat] = result[cat] or {}
+        result[cat][kind] = els
+    end
+
+    return result
+end
+
+function Lister:MakeCategoryElement(title)
+    local opts = {
+        inactive = true,
+        text_color = GetARGB(255, 0, 204, 204)
+    }
+
+    local el = ItemListSeparator(title, title, opts)
+
+    return el
+end
+
+function Lister:MakeKindElement(title)
+    local opts = {
+        inactive = true,
+        text_color = GetARGB(255, 0, 153, 153)
+    }
+
+    local el = ItemListSeparator(title, title, opts)
+
+    return el
 end
 
 ----------------------------------------------------------------- utils
@@ -507,6 +756,7 @@ function GetInventoryListEntries(npc, all)
             table.insert(list_entries[sec][durability], item)
         end
     end
+    -- todo sort here
 
     return list_entries
 end
@@ -806,6 +1056,10 @@ end
 
 -- ConvertPercentStrToNum converts "78%" to 0.78
 function ConvertPercentStrToNum(durStr)
+    if type(durStr) == "number" then
+        return durStr
+    end
+
     durStr = durStr:gsub("%%$", "")
     local num = tonumber(durStr)
     if num == nil then
@@ -828,4 +1082,39 @@ function CheckDurability(d1, d2)
     end
 
     return false
+end
+
+function GetCategoriesByKind()
+    local cat_index = {}
+    for _, cat in pairs(categories) do
+        for _, knd in pairs(cat.kinds) do
+            cat_index[knd] = cat
+        end
+    end
+
+    return cat_index
+end
+
+-- GetKindsOrder returns stable kind order from table[kind]
+function GetKindsOrder(by_kind)
+    local kinds = {}
+    for kind, _ in pairs(by_kind) do
+        table.insert(kinds, kind)
+    end
+
+    table.sort(kinds, function(k1, k2)
+        return k1 < k2
+    end)
+
+
+    return kinds
+end
+
+function GetCategoriesOrder()
+    local order = {}
+    for _, cat in pairs(categories) do
+        table.insert(order, cat)
+    end
+
+    return order
 end

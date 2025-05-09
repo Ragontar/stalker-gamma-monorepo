@@ -3,7 +3,7 @@ w_* - Weapons + Ammo (w_ammo)
 o_* Outfits
 i_* Items?
 
-
+-- weapons (Primary, handguns, melee, explosives, misc?)
 w_sniper            = 1
 w_rifle             = 1
 w_smg               = 1
@@ -13,32 +13,47 @@ w_melee             = 1
 w_misc              = 1
 w_base              = 1
 w_explosive         = 1
+
+--Ammo
+w_ammo              = 9
+
+-- armor
 o_heavy             = 2
 o_sci               = 2
 o_medium            = 2
 o_light             = 2
 o_helmet            = 2
+
+-- equipment
 i_backpack          = 2
+i_device            = 4
+
+-- Tech Items
+i_tool              = 5 --tools
+i_repair            = 5 --repair
+i_part              = 13 --resources
+i_upgrade           = 12 --upgrades
+i_kit               = 5 -- toolkit for mechanics
+
+
+-- Trophies
 i_arty              = 3
 i_arty_junk         = 3
 i_arty_cont         = 3
-i_device            = 4
-i_tool              = 5
-i_repair            = 5
-i_kit               = 5
-i_medical           = 6
-i_food              = 7
-i_drink             = 7
-i_mutant_cooked     = 7
 i_mutant_raw        = 7
+i_mutant_part       = 10
+i_mutant_belt       = 10
+
+-- consumables
+i_food              = 7
+i_mutant_cooked     = 7
+i_drink             = 7 -- drinks
+i_medical           = 6 -- meds
+
+-- Misc
 i_letter            = 8
 i_quest             = 8
-w_ammo              = 9
-i_mutant_belt       = 10
-i_mutant_part       = 10
 i_misc              = 11
-i_upgrade           = 12
-i_part              = 13
 
 
 From spawner:
