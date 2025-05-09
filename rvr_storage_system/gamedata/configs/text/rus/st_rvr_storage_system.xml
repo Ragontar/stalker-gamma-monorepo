@@ -2,10 +2,72 @@
     <string id="ui_mcm_menu_rvr_storage_system">
         <text>Rvr Storage System</text>
     </string>
-    <string id="ui_mcm_rvr_storage_system_value_1">
-        <text>Some Hueta</text>
-    </string>
     <string id="ui_mcm_example_text">
         <text>Rvr Storage System</text>
     </string>
+    <string id="st_rvr_storage_inc">
+        <text>+</text>
+    </string>
+    <string id="st_rvr_storage_dec">
+        <text>-</text>
+    </string>
+
+    <!-- Window titles -->
+    <string id="st_rvr_ss_actor_inventory_title">
+        <text>Рюкзак</text>
+    </string>
+    <string id="st_rvr_ss_storage_inventory_title">
+        <text>Хранилище</text>
+    </string>
+    <string id="st_rvr_ss_durability_column_title">
+        <text>Состояние</text>
+    </string>
+    <string id="st_rvr_ss_amount_column_title">
+        <text>Кол-во</text>
+    </string>
+
+
+    <!-- Categories -->
+    <string id="st_c_weapons">
+        <text>Оружие</text>
+    </string>
+    <string id="st_c_ammo">
+        <text>Амуниция</text>
+    </string>
+    <string id="st_c_armor">
+        <text>Броня и шлемы</text>
+    </string>
+    <string id="st_c_equipment">
+        <text>Снаряжение</text>
+    </string>
+    <string id="st_c_tech">
+        <text>Техническое</text>
+    </string>
+    <string id="st_c_trophies">
+        <text>Трофеи</text>
+    </string>
+    <string id="st_c_consumables">
+        <text>Расходуемое</text>
+    </string>
+    <string id="st_c_misc">
+        <text>Прочее</text>
+    </string>
+    <string id="st_c_unknown">
+        <text>Неизвестно</text>
+    </string>
+
+
+    <string id="st_rvr_ss_mb_set_stash_created">
+        <text>Альтернативный тайник создан</text>
+    </string>
+    <string id="st_rvr_ss_mb_set_stash_type_text">
+        <text>Хотите создать альтернативный тип тайника? Если нет, то будет создан обычный.</text>
+    </string>
+
+    <!-- <string id="st_c_consumables">
+        <text>-</text>
+    </string>
+    <string id="st_c_consumables">
+        <text>-</text>
+    </string> -->
 </string_table>

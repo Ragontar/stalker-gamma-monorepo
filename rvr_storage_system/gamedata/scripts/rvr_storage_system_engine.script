@@ -7,7 +7,7 @@ function on_game_start()
     RegisterScriptCallback("on_key_press", on_key_press)
     RegisterScriptCallback("save_state", save_state)
     RegisterScriptCallback("load_state", load_state)
-    RegisterScriptCallback("actor_item_to_ruck", actor_item_to_ruck)
+    -- RegisterScriptCallback("actor_item_to_ruck", actor_item_to_ruck)
     RegisterScriptCallback("on_actor_inventory_update_finished", on_actor_inventory_update_finished)
     RegisterScriptCallback("on_storage_inventory_update_finished", on_storage_inventory_update_finished)
     RegisterScriptCallback("rvr_storage_actor_on_stash_create", rvr_storage_actor_on_stash_create)
@@ -45,6 +45,8 @@ SpawnerEventSource = "rvr_spawner_event_source"
 -----------
 
 cfg = {
+    dev_debug_mode = false,
+
     ui_storage_min_reset_period_ms = 100,
     ui_shift_multiplier = 5, -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
     ui_ctrl_multiplier = 10, -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
@@ -124,7 +126,9 @@ function start(storage)
 end
 
 function init()
-    news_manager.send_tip(db.actor, "Reaver Storage System initialized", nil, nil, 30000)
+    if cfg.dev_debug_mode then
+        news_manager.send_tip(db.actor, "Reaver Storage System initialized", nil, nil, 30000)
+    end
     InitDefaultStorages()
     InitActiveStorages()
 end
@@ -157,7 +161,9 @@ end
 -- Function called when a key is pressed
 function on_key_press(dik)
     if dik == DIK_keys.DIK_O then
-        start(ActiveStorages["test_bank"])
+        if cfg.dev_debug_mode then
+            start(ActiveStorages["test_bank"])
+        end
     end
 end
 
@@ -407,13 +413,15 @@ end
 
 function UIStorage:OnKeyboard(dik, keyboard_action)
     local res = CUIScriptWnd.OnKeyboard(self, dik, keyboard_action)
-    if res ~= false then
+    if res then
         return res
     end
 
     if keyboard_action == ui_events.WINDOW_KEY_PRESSED then
         if dik == DIK_keys.DIK_ESCAPE then
-            self:Close()
+            if self:IsShown() then
+                self:Close()
+            end
 
             return
         end
@@ -433,25 +441,25 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
 
     if keyboard_action == ui_events.WINDOW_KEY_RELEASED then
         if dik == DIK_keys.DIK_LSHIFT then
-            self.multiplier = math.max(self.multiplier / 5, 1)
+            self.multiplier = math.max(self.multiplier / cfg.ui_shift_multiplier, 1)
 
             return
         end
 
         if dik == DIK_keys.DIK_LCONTROL then
-            self.multiplier = math.max(self.multiplier / 5, 1)
+            self.multiplier = math.max(self.multiplier / cfg.ui_ctrl_multiplier, 1)
 
             return
         end
     end
 
-    if keyboard_action == ui_events.WINDOW_LBUTTON_UP then
-        self:Reset()
-    end
+    -- if keyboard_action == ui_events.WINDOW_LBUTTON_UP then
+    --     self:Reset()
+    -- end
 
     local bind = dik_to_bind(dik)
     if bind == key_bindings.kINVENTORY or bind == key_bindings.kUSE then
-        if keybind_pass() then
+        if self:IsShown() and keybind_pass() then
             self:Close()
         end
 
@@ -488,7 +496,7 @@ function UIStorage:OnActorItemList()
     local amount = CalculatePutOrGetAmount(pick.section, pick.amount) * self.multiplier
     local absent_amount = RemoveItems(db.actor, pick.section, amount, pick.durability)
     self.storage:Put(pick.section, pick.durability_text, amount - absent_amount)
-    printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
+    printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount .. "absent_amount= " .. absent_amount)
 
     self:Reset()
 end
@@ -1078,9 +1086,6 @@ end
 
 -- RemoveItems returns remaining amount, that cannot be removed
 function RemoveItems(npc, section, amount, durability)
-    -- todo dura checks
-    amount = amount or 1
-
     local kind = SYS_GetParam(0, section, "kind") or "na"
     local cnt = amount
     local max_uses = IsItem("multiuse", section)
@@ -1089,10 +1094,12 @@ function RemoveItems(npc, section, amount, durability)
     local function itr_item(temp, obj)
         if keep_itr and (obj and obj:section() == section and CheckDurability(obj:condition(), durability)) then
             local uses = max_uses and obj:get_remaining_uses() or 1
+            printf("cnt=%s uses=%s max_uses=%s", tostring(cnt), tostring(uses), tostring(max_uses))
             cnt = cnt - uses
-            if (cnt >= 0) then
-                alife_release_id(obj:id(), "released " .. obj:id())
 
+            alife_release_id(obj:id(), "released " .. obj:id())
+
+            if (cnt >= 0) then
                 if (cnt == 0) then
                     keep_itr = false
                 end
@@ -1121,19 +1128,19 @@ function RemoveItems(npc, section, amount, durability)
         end
     end
 
-    if cnt > 0 then
-        log("RemoveItems cannot remove all items! Left: %d", cnt)
-    end
-
     if kind == "w_ammo" then
         npc:iterate_ruck(itr_ammo, nil)
     else
         npc:iterate_ruck(itr_item, nil)
     end
 
+    if cnt > 0 then
+        log("RemoveItems cannot remove all items! Left: %d", cnt)
+    end
+
     SendScriptCallback("on_actor_inventory_update_finished")
 
-    return cnt
+    return math.max(cnt, 0)
 end
 
 -- ConvertPercentStrToNum converts "78%" to 0.78
@@ -1245,9 +1252,8 @@ function physic_object_on_use_callback(obj, who)
     log("adv stash id: " .. obj:id())
 
     CreateTimeEvent("UIStorage", "close_inventory_ui", 0, function()
-        if ui_inventory.GUI then
-            ui_inventory.GUI:Close()
-        end
+        ui_inventory.hide_inventory()
+        ui_inventory.GUI = ui_inventory.UIInventory() -- because it's fucking magic
 
         start(stg)
 
