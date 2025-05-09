@@ -43,9 +43,17 @@ SpawnerEventSource = "rvr_spawner_event_source"
 
 cfg = {
     ui_storage_min_reset_period_ms = 100,
+    ui_shift_multiplier = 5, -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
+    ui_ctrl_multiplier = 10, -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
+
     spawner_durability_set_delay_seconds = 0.1,
 
-    lister_item_width = 348 -- should be the same as list_box width
+    lister_item_width = 348, -- should be the same as list_box width
+    lister_enable_merged_kinds = true,
+    lister_enable_kinds_separators = false,
+
+    storage_enable_weapon = false, -- not fully implemented yet
+    storage_enable_armor = false,  -- not fully implemented yet
 }
 
 -----------
@@ -56,15 +64,16 @@ cfg = {
 --- Categories
 -----
 
+-- ! This category order will also be used in UI
 categories = {
     { id = "c_weapons",     display_name = "st_c_weapons",     kinds = { "w_sniper", "w_rifle", "w_smg", "w_shotgun", "w_pistol", "w_melee", "w_misc", "w_base", "w_explosive" } },
     { id = "c_ammo",        display_name = "st_c_ammo",        kinds = { "w_ammo" } },
     { id = "c_armor",       display_name = "st_c_armor",       kinds = { "o_heavy", "o_sci", "o_medium", "o_light", "o_helmet" } },
     { id = "c_equipment",   display_name = "st_c_equipment",   kinds = { "i_backpack", "i_device" } },
-    { id = "c_tech",        display_name = "st_c_tech",        kinds = { "i_tool", "i_repair", "i_part", "i_upgrade", "i_kit" } },
+    { id = "c_tech",        display_name = "st_c_tech",        kinds = { "i_tool", "i_repair", "i_upgrade", "i_kit" },                                                           opts = { hide_durability = true } },
     { id = "c_trophies",    display_name = "st_c_trophies",    kinds = { "i_arty", "i_arty_junk", "i_arty_cont", "i_mutant_raw", "i_mutant_part", "i_mutant_belt" } },
-    { id = "c_consumables", display_name = "st_c_consumables", kinds = { "i_food", "i_mutant_cooked", "i_drink", "i_medical" } },
-    { id = "c_misc",        display_name = "st_c_misc",        kinds = { "i_letter", "i_quest", "i_misc" } },
+    { id = "c_consumables", display_name = "st_c_consumables", kinds = { "i_food", "i_mutant_cooked", "i_drink", "i_medical" },                                                  opts = { hide_durability = true } },
+    { id = "c_misc",        display_name = "st_c_misc",        kinds = { "i_letter", "i_quest", "i_misc", "i_part" } },
     { id = "c_unknown",     display_name = "st_c_unknown",     kinds = { "unknown" } },
 }
 
@@ -169,7 +178,6 @@ class "ItemListElement" (CUIListBoxItem)
 
 function ItemListElement:__init(section, width, name, durability, amount, opts)
     local height = 22
-    -- local offset = 5
     local opts = opts or {}
 
     super(section, width)
@@ -206,8 +214,6 @@ end
 class "ItemListSeparator" (CUIListBoxItem)
 
 function ItemListSeparator:__init(index, title, opts)
-    local height = 22
-    local offset = 5
     local width = cfg.lister_item_width
     local opts = opts or {}
     local line = "_________________________"
@@ -224,7 +230,6 @@ function ItemListSeparator:__init(index, title, opts)
     self.left_f:SetWndPos(vector2():set(0, 0))
 
     self.title_f = self:AddTextField(title, 2)
-    -- self.title_f:SetEllipsis(true)
     self.title_f:SetText(title)
     self.title_f:SetTextColor(opts.text_color)
     self.title_f:SetWndRect(Frect():set(0, 0, width, 22))
@@ -235,9 +240,6 @@ function ItemListSeparator:__init(index, title, opts)
     self.right_f:SetTextColor(opts.text_color)
     self.right_f:SetWndRect(Frect():set(0, 0, width, 22))
     self.right_f:SetWndPos(vector2():set(width / 2 + 50, 0))
-
-    -- self.title_f = self:GetTextItem()
-    -- self.title_f:SetText(title)
 end
 
 -----------------------------------------------------------------
@@ -261,18 +263,22 @@ function UIStorage:InitControls()
     local xml = self.xml
     xml:ParseFile("ui_rvr_storage.xml")
 
-    self.actor_d       = xml:InitStatic("stg_actor_inventory", self)
-    self.actor_d_frame = xml:InitFrame("stg_actor_inventory:frame_base", self.actor_d)
-    self.actor_d_list  = xml:InitFrame("stg_actor_inventory:frame_list", self.actor_d)
-    self.actor_d_cap   = xml:InitStatic("stg_actor_inventory:cap", self.actor_d)
-    self.actor_inv     = xml:InitListBox("stg_actor_inventory:list", self.actor_d_list)
+    self.actor_d                = xml:InitStatic("stg_actor_inventory", self)
+    self.actor_d_frame          = xml:InitFrame("stg_actor_inventory:frame_base", self.actor_d)
+    self.actor_d_list           = xml:InitFrame("stg_actor_inventory:frame_list", self.actor_d)
+    self.actor_d_cap            = xml:InitStatic("stg_actor_inventory:cap", self.actor_d)
+    self.actor_d_durability_cap = xml:InitStatic("stg_actor_inventory:cap_durability", self.actor_d)
+    self.actor_d_amount_cap     = xml:InitStatic("stg_actor_inventory:cap_amount", self.actor_d)
+    self.actor_inv              = xml:InitListBox("stg_actor_inventory:list", self.actor_d_list)
     self:Register(self.actor_inv, "move_actor_item_db_click")
 
-    self.storage_d       = xml:InitStatic("stg_storage_inventory", self)
-    self.storage_d_frame = xml:InitFrame("stg_storage_inventory:frame_base", self.storage_d)
-    self.storage_d_list  = xml:InitFrame("stg_storage_inventory:frame_list", self.storage_d)
-    self.storage_d_cap   = xml:InitStatic("stg_storage_inventory:cap", self.storage_d)
-    self.storage_inv     = xml:InitListBox("stg_storage_inventory:list", self.storage_d_list)
+    self.storage_d                = xml:InitStatic("stg_storage_inventory", self)
+    self.storage_d_frame          = xml:InitFrame("stg_storage_inventory:frame_base", self.storage_d)
+    self.storage_d_list           = xml:InitFrame("stg_storage_inventory:frame_list", self.storage_d)
+    self.storage_d_cap            = xml:InitStatic("stg_storage_inventory:cap", self.storage_d)
+    self.storage_d_durability_cap = xml:InitStatic("stg_storage_inventory:cap_durability", self.storage_d)
+    self.storage_d_amount_cap     = xml:InitStatic("stg_storage_inventory:cap_amount", self.storage_d)
+    self.storage_inv              = xml:InitListBox("stg_storage_inventory:list", self.storage_d_list)
     self:Register(self.storage_inv, "move_storage_item_db_click")
 end
 
@@ -292,7 +298,6 @@ function UIStorage:TestBankMode_Init(storage)
     self.mode = mode_test_bank
     self.storage = storage
     self.multiplier = 1
-    -- self:PlaySND(snd_open)
 
     self:LogTr("TestBankMode_Init call")
     self:Log("storage params: id=%s | weight_limit=%s", tostring(storage:GetID()), tostring(storage:GetWeightLimit()))
@@ -302,9 +307,6 @@ end
 
 function UIStorage:Close()
     self:Log("Close")
-
-    -- Sound effect
-    -- self:PlaySND(snd_close)
 
     self:HideDialog()
     self:Show(false)
@@ -402,13 +404,13 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
         end
 
         if dik == DIK_keys.DIK_LSHIFT then
-            self.multiplier = self.multiplier * 5
+            self.multiplier = self.multiplier * cfg.ui_shift_multiplier
 
             return
         end
 
         if dik == DIK_keys.DIK_LCONTROL then
-            self.multiplier = self.multiplier * 5
+            self.multiplier = self.multiplier * cfg.ui_ctrl_multiplier
 
             return
         end
@@ -537,7 +539,6 @@ function Storage:Get(section, durability, amount)
 
     self.Content[section][durability].amount = self.Content[section][durability].amount - amount
 
-    -- todo sort here
     return {
         section = section,
         durability = durability,
@@ -560,7 +561,6 @@ function Storage:Put(section, durability, amount)
     self.Content[section][durability].amount = self.Content[section][durability].amount + amount
 
     SendScriptCallback("on_storage_inventory_update_finished", self)
-    -- todo sort here
 end
 
 function Storage:GetID()
@@ -600,11 +600,11 @@ function Lister:FromNPCInv(inv)
             local amount = CalculateItemsAmount(by_durability)
 
             if amount > 0 then
-                local _E = ItemListElement(sec, cfg.lister_item_width, GetObjectName(sec),
+                local el = self:MakeListElement(sec, cfg.lister_item_width, GetObjectName(sec),
                     durability, amount)
-                _E:SetTextColor(GetARGB(255, 150, 150, 250))
+                el:SetTextColor(GetARGB(255, 150, 150, 250))
 
-                table.insert(self.ListElements, _E)
+                table.insert(self.ListElements, el)
             end
         end
     end
@@ -613,23 +613,52 @@ function Lister:FromNPCInv(inv)
 end
 
 function Lister:FromStorage(storage)
-    if not storage or not storage.GetContent then --todo seems here
+    if not storage or not storage.GetContent then
         return nil
     end
 
     for sec, by_durability in pairs(storage:GetContent()) do
         for durability, item in pairs(by_durability) do
             if item.amount > 0 then
-                local _E = ItemListElement(sec, cfg.lister_item_width, GetObjectName(sec),
+                local el = self:MakeListElement(sec, cfg.lister_item_width, GetObjectName(sec),
                     durability, item.amount)
-                _E:SetTextColor(GetARGB(255, 150, 150, 250))
+                el:SetTextColor(GetARGB(255, 150, 150, 250))
 
-                table.insert(self.ListElements, _E)
+                table.insert(self.ListElements, el)
             end
         end
     end
 
     return self
+end
+
+function Lister:MakeListElement(section, width, name, durability, amount, opts)
+    local has_durability = self:HasDurability(section)
+    local opts = opts or {}
+
+    opts.hide_durability = not has_durability
+
+    local _E = ItemListElement(section, width, name, durability, amount, opts)
+    _E:SetTextColor(GetARGB(255, 150, 150, 250))
+
+    return _E
+end
+
+function Lister:HasDurability(section)
+    local has_cond = SYS_GetParam(1, section, "use_condition") or false
+    if not has_cond then
+        return false
+    end
+
+    local kind = SYS_GetParam(0, section, "kind") or "unknown"
+    local cats = GetCategoriesByKind()
+    local opts = cats[kind].opts or {}
+
+    if opts.hide_durability then
+        return false
+    end
+
+    return true
 end
 
 -- GetListElements returns ItemListElement table
@@ -644,15 +673,31 @@ function Lister:Sort(elements, opts)
     local kind_order = {}
 
     for _, cat in pairs(GetCategoriesOrder()) do
+        if cat.id == "c_armor" and not cfg.storage_enable_armor then
+            log("Lister: armor storage disabled, skipping")
+
+            goto continue
+        end
+
+        if cat.id == "c_weapons" and not cfg.storage_enable_armor then
+            log("Lister: weapon storage disabled, skipping")
+
+            goto continue
+        end
+
         local bk = by_cat_kind[cat]
         if bk then
+            -- add category separator
             local name = game.translate_string(cat.display_name) or cat.display_name
             table.insert(result, self:MakeCategoryElement(name))
 
             for _, kind in pairs(GetKindsOrder(bk)) do
                 if bk[kind] then
-                    local name = game.translate_string("st_" .. kind) or "st_" .. kind
-                    table.insert(result, self:MakeKindElement(name))
+                    if cfg.lister_enable_kinds_separators then
+                        -- add kind separator
+                        local name = game.translate_string("st_" .. kind) or "st_" .. kind
+                        table.insert(result, self:MakeKindElement(name))
+                    end
 
                     for _, el in pairs(bk[kind]) do
                         table.insert(result, el)
@@ -660,6 +705,8 @@ function Lister:Sort(elements, opts)
                 end
             end
         end
+
+        ::continue::
     end
 
     return result
@@ -756,7 +803,6 @@ function GetInventoryListEntries(npc, all)
             table.insert(list_entries[sec][durability], item)
         end
     end
-    -- todo sort here
 
     return list_entries
 end

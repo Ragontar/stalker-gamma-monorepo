@@ -3,6 +3,10 @@ w_* - Weapons + Ammo (w_ammo)
 o_* Outfits
 i_* Items?
 
+merged kinds:
+W: m_w_primary, m_w_melee, m_w_explosives
+Armor: m_o_armor (with helmets)
+
 -- weapons (Primary, handguns, melee, explosives, misc?)
 w_sniper            = 1
 w_rifle             = 1
@@ -10,7 +14,7 @@ w_smg               = 1
 w_shotgun           = 1
 w_pistol            = 1
 w_melee             = 1
-w_misc              = 1
+w_misc              = 1 -- attaches?
 w_base              = 1
 w_explosive         = 1
 
