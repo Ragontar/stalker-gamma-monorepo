@@ -4,7 +4,6 @@ AddScriptCallback("on_storage_inventory_update_finished")
 function on_game_start()
     RegisterScriptCallback("actor_on_first_update", init)
     RegisterScriptCallback("on_key_press", on_key_press)
-    -- RegisterScriptCallback("on_key_release", on_key_release)
     RegisterScriptCallback("save_state", save_state)
     RegisterScriptCallback("load_state", load_state)
     RegisterScriptCallback("actor_item_to_ruck", actor_item_to_ruck)
@@ -101,29 +100,14 @@ function on_storage_inventory_update_finished(storage)
     end
 end
 
--- function on_key_release()
---     if dik == DIK_keys.MOUSE_1 or dik == DIK_keys.MOUSE_2 or dik == DIK_keys.MOUSE_3 then
---         printf("MOUSE_1 release callback")
---         if GUI and GUI:IsShown() then
---             GUI:Reset()
---         end
---     end
--- end
-
 -- Function called when a key is pressed
 function on_key_press(dik)
     if dik == DIK_keys.DIK_O then
         start(mode_test_bank, ActiveStorages["test_bank"])
-        -- printf("content=" .. tostring(ActiveStorages["test_bank"]:GetContent()))
     end
-    -- if dik == WINDOW_LBUTTON_UP then
-    --     if GUI and GUI:IsShown() then
-    --         GUI:Reset()
-    --     end
-    -- end
 end
 
-function save_state(m_data) -- todo save stashes
+function save_state(m_data)
     local rvr_storage_system_data = {
         RVRData = RVRData
     }
@@ -131,7 +115,7 @@ function save_state(m_data) -- todo save stashes
     m_data.rvr_storage_system_data = rvr_storage_system_data
 end
 
-function load_state(m_data) -- todo load stashes
+function load_state(m_data)
     if not m_data.rvr_storage_system_data then
         return
     end
@@ -168,22 +152,6 @@ function ItemListElement:__init(section, width, name, durability, amount)
     self.amount_f = self:AddTextField(amount, 2)
     self.amount_f:SetText(amount)
     self.amount_f:SetWndPos(vector2():set(width - 50, 0))
-
-    -- self.text        = self:GetTextItem()
-    -- self.text:SetWndRect(Frect():set(0, 0, width, height))
-    -- self:SetTextColor(GetARGB(255, 200, 200, 200))
-    -- self.text:SetFont(GetFontLetterica16Russian())
-    -- self.text:SetWndSize(vector2():set((txt_2 and (width - 40) or width), height))
-    -- self.text:SetWndPos(vector2():set(offset, 0))
-    -- self.text:SetEllipsis(true)
-    -- self.text:SetText(txt_1)
-
-
-    -- self.flag = self:AddTextField(str_flag)
-    -- self.flag:SetTextColor(GetARGB(255, 170, 170, 250))
-    -- self.flag:SetFont(GetFontLetterica16Russian())
-    -- self.flag:SetWndSize(vector2():set(40, height))
-    -- self.flag:SetWndPos(vector2():set(width - 40, 0))
 end
 
 -----------------------------------------------------------------
@@ -201,7 +169,6 @@ end
 
 function UIStorage:InitControls()
     self:SetWndRect(Frect():set(0, 0, 1024, 768))
-    -- self:SetAutoDelete(true)
 
     self.xml = CScriptXmlInit()
     local xml = self.xml
@@ -213,7 +180,6 @@ function UIStorage:InitControls()
     self.actor_d_cap   = xml:InitStatic("stg_actor_inventory:cap", self.actor_d)
     self.actor_inv     = xml:InitListBox("stg_actor_inventory:list", self.actor_d_list)
     self:Register(self.actor_inv, "move_actor_item_db_click")
-    -- self:Register(self.actor_inv, "refresh")
 
     self.storage_d       = xml:InitStatic("stg_storage_inventory", self)
     self.storage_d_frame = xml:InitFrame("stg_storage_inventory:frame_base", self.storage_d)
@@ -221,13 +187,11 @@ function UIStorage:InitControls()
     self.storage_d_cap   = xml:InitStatic("stg_storage_inventory:cap", self.storage_d)
     self.storage_inv     = xml:InitListBox("stg_storage_inventory:list", self.storage_d_list)
     self:Register(self.storage_inv, "move_storage_item_db_click")
-    -- self:Register(self.storage_inv, "refresh")
 end
 
 function UIStorage:InitCallBacks()
     self:AddCallback("move_storage_item_db_click", ui_events.LIST_ITEM_SELECT, self.OnStorageItemList, self)
     self:AddCallback("move_actor_item_db_click", ui_events.LIST_ITEM_SELECT, self.OnActorItemList, self)
-    self:AddCallback("refresh", ui_events.LIST_ITEM_SELECT, self.Refresh, self)
     -- self:AddCallback("itm_type", ui_events.LIST_ITEM_SELECT, self.OnItemType, self)
     -- self:AddCallback("itm_list", ui_events.LIST_ITEM_SELECT, self.OnItemList, self)
     -- self:AddCallback("button_name", ui_events.BUTTON_CLICKED, self.OnButton_Name, self)
@@ -265,24 +229,18 @@ function UIStorage:Reset()
     self.storage_inv:Clear()
     self.actor_inv:Clear()
 
-    -- self.storage_inv:RemoveAll()
-    -- self.actor_inv:RemoveAll()
-
     self:RenderActorInv()
     self:RenderStorageInv()
 
-    CUIScriptWnd.Update(self)
-    self:Update()
+    -- CUIScriptWnd.Update(self)
+    -- self:Update()
 end
 
+
+-- Refresh UNIMPLEMENTED update counters without reset.
 function UIStorage:Refresh()
     self:Log("Refresh")
     -- todo update counters without reset
-    -- self.storage_inv:Clear()
-    -- self.actor_inv:Clear()
-
-    -- self:RenderActorInv()
-    -- self:RenderStorageInv()
 end
 
 function UIStorage:RenderStorageInv()
@@ -511,7 +469,6 @@ function GetInventory(npc, all)
 
     local function iterate(owner, obj)
         sec = obj:section()
-        -- kind = SYS_GetParam(0, sec, "kind") or "na"
         printf("GetInventory: got section: " .. sec)
 
         table.insert(inv, obj)
@@ -706,9 +663,6 @@ function SpawnItem(npc, section, amount, durability)
             SendScriptCallback("on_actor_inventory_update_finished")
         end
     end
-
-    printf("durability=" .. durability)
-    --     -- news_manager.relocate_item(actor, "in", section, amount)
 end
 
 -- RemoveItems returns remaining amount, that cannot be removed
@@ -722,9 +676,7 @@ function RemoveItems(npc, section, amount, durability)
     local keep_itr = true
 
     local function itr_item(temp, obj)
-        --printf("~relocate_item_from_actor | checked [%s]", obj:section())
         if keep_itr and (obj and obj:section() == section) then
-            --printf("-relocate_item_from_actor | found needed section [%s]", section)
             local uses = max_uses and obj:get_remaining_uses() or 1
             cnt = cnt - uses
             if (cnt >= 0) then
