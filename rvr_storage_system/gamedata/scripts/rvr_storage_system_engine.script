@@ -35,6 +35,21 @@ RVRData = nil
 GUI = nil
 ActiveStorages = nil
 
+SpawnerEventSource = "rvr_spawner_event_source"
+
+-----------
+--- Config Section
+-----------
+
+cfg = {
+    ui_storage_min_reset_period_ms = 100,
+    spawner_durability_set_delay_seconds = 0.1
+}
+
+-----------
+--- Config Section end
+-----------
+
 function start(mode, storage)
     if (not mode) then
         printdbg("nil mode received")
@@ -86,11 +101,15 @@ function actor_item_to_ruck()
 end
 
 function on_actor_inventory_update_finished()
+    local delay_seconds = 0.1
+    -- local expiration_time = time_global() + 3 * delay_seconds * 1000
     -- because fokin server objects have delayed unregistration
-    CreateTimeEvent("gui_update_required", "update_storage_gui", 0.1, function()
+    CreateTimeEvent(SpawnerEventSource, "update_storage_gui", delay_seconds, function()
         if GUI and GUI:IsShown() then
-            GUI:Reset()
+            GUI:Reset(true) --force update
         end
+
+        return true -- needed to remove event from queue
     end)
 end
 
@@ -160,6 +179,7 @@ class "UIStorage" (CUIScriptWnd)
 function UIStorage:__init()
     super()
     self.mode = mode_test_bank
+    self.next_reset_time = 0
     self:InitControls()
     self:InitCallBacks()
 end
@@ -190,8 +210,8 @@ function UIStorage:InitControls()
 end
 
 function UIStorage:InitCallBacks()
-    self:AddCallback("move_storage_item_db_click", ui_events.LIST_ITEM_SELECT, self.OnStorageItemList, self)
-    self:AddCallback("move_actor_item_db_click", ui_events.LIST_ITEM_SELECT, self.OnActorItemList, self)
+    self:AddCallback("move_storage_item_db_click", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnStorageItemList, self)
+    self:AddCallback("move_actor_item_db_click", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnActorItemList, self)
     -- self:AddCallback("itm_type", ui_events.LIST_ITEM_SELECT, self.OnItemType, self)
     -- self:AddCallback("itm_list", ui_events.LIST_ITEM_SELECT, self.OnItemList, self)
     -- self:AddCallback("button_name", ui_events.BUTTON_CLICKED, self.OnButton_Name, self)
@@ -202,11 +222,13 @@ end
 
 -- Test bank mode
 function UIStorage:TestBankMode_Init(storage)
-    self:Log("TestBankMode_Init")
     self.mode = mode_test_bank
     self.storage = storage
     self.multiplier = 1
     -- self:PlaySND(snd_open)
+
+    self:LogTr("TestBankMode_Init call")
+    self:Log("storage params: id=%s | weight_limit=%s", tostring(storage:GetID()), tostring(storage:GetWeightLimit()))
 
     self:Reset()
 end
@@ -223,8 +245,14 @@ function UIStorage:Close()
     Unregister_UI("UIStorage")
 end
 
-function UIStorage:Reset()
-    self:Log("Reset")
+function UIStorage:Reset(force)
+    if not force and self.next_reset_time > time_global() then
+        return
+    end
+
+    self.next_reset_time = time_global() + cfg.ui_storage_min_reset_period_ms
+
+    self:LogTr("Reset call")
 
     self.storage_inv:Clear()
     self.actor_inv:Clear()
@@ -232,10 +260,9 @@ function UIStorage:Reset()
     self:RenderActorInv()
     self:RenderStorageInv()
 
-    -- CUIScriptWnd.Update(self)
-    -- self:Update()
+    CUIScriptWnd.Update(self)
+    self:Update()
 end
-
 
 -- Refresh UNIMPLEMENTED update counters without reset.
 function UIStorage:Refresh()
@@ -326,7 +353,7 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
 end
 
 function UIStorage:OnStorageItemList()
-    printf("OnStorageItemList")
+    self:Log("OnStorageItemList call")
 
     local pick = self.storage_inv:GetSelectedItem()
     if not pick then
@@ -359,9 +386,40 @@ function UIStorage:OnActorItemList()
     self:Reset()
 end
 
-function UIStorage:Log(msg)
-    printf("mode=" .. (self.mode or "undefined"))
-    printf(msg)
+function UIStorage:Log(msg, ...)
+    if not msg then
+        return
+    end
+
+    -- mode, weight_limit, storage (id, weight_limit)
+    local st_id = "undefined"
+    local st_wl = "undefined"
+    if self.storage then
+        st_id = tostring(self.storage:GetID())
+        st_wl = tostring(self.storage:GetWeightLimit())
+    end
+
+    local ui_mode = "undefined"
+    if self.mode then
+        ui_mode = tostring(self.mode)
+    end
+
+    local ctx = string.format(
+        "[module: %s | mode: %s| st_id: %s | st__wl: %s]",
+        "UIStorage",
+        ui_mode,
+        st_id,
+        st_wl
+    )
+
+    msg = msg .. " |---| ctx=" .. ctx
+
+    log(msg, ...)
+end
+
+function UIStorage:LogTr(msg, ...)
+    log(debug.traceback())
+    self:Log(msg, ...)
 end
 
 ----------------------------------------------------------------- Storage
@@ -413,6 +471,14 @@ function Storage:Put(section, durability, amount)
     self.Content[section][durability].amount = self.Content[section][durability].amount + amount
 
     SendScriptCallback("on_storage_inventory_update_finished", self)
+end
+
+function Storage:GetID()
+    return self.ID
+end
+
+function Storage:GetWeightLimit()
+    return self.WeightLimit
 end
 
 -- GetContent returns Content field which is a table[section][durability]{amount}
@@ -469,7 +535,7 @@ function GetInventory(npc, all)
 
     local function iterate(owner, obj)
         sec = obj:section()
-        printf("GetInventory: got section: " .. sec)
+        log("GetInventory: got section: %s", sec)
 
         table.insert(inv, obj)
     end
@@ -662,6 +728,19 @@ function SpawnItem(npc, section, amount, durability)
         if npc:id() == AC_ID then
             SendScriptCallback("on_actor_inventory_update_finished")
         end
+
+        if se_obj then
+            CreateTimeEvent(SpawnerEventSource, "zzzzz", cfg.spawner_durability_set_delay_seconds, function()
+                local obj = get_object_by_id(se_obj.id)
+                printf("id=" .. obj:id())
+                printf("durability=" .. durability)
+                obj:set_condition(durability + 0.005) -- because sometimes it sets 1% lower, maybe precision issues
+
+                SendScriptCallback("on_actor_inventory_update_finished")
+
+                return true
+            end)
+        end
     end
 end
 
@@ -676,7 +755,7 @@ function RemoveItems(npc, section, amount, durability)
     local keep_itr = true
 
     local function itr_item(temp, obj)
-        if keep_itr and (obj and obj:section() == section) then
+        if keep_itr and (obj and obj:section() == section and CheckDurability(obj:condition(), durability)) then
             local uses = max_uses and obj:get_remaining_uses() or 1
             cnt = cnt - uses
             if (cnt >= 0) then
@@ -690,8 +769,6 @@ function RemoveItems(npc, section, amount, durability)
                 SpawnItem(npc, section, remain, durability)
                 keep_itr = false
             end
-
-            SendScriptCallback("on_actor_inventory_update_finished")
         end
     end
 
@@ -709,9 +786,11 @@ function RemoveItems(npc, section, amount, durability)
                 SpawnItem(npc, section, remain, durability)
                 keep_itr = false
             end
-
-            SendScriptCallback("on_actor_inventory_update_finished")
         end
+    end
+
+    if cnt > 0 then
+        log("RemoveItems cannot remove all items! Left: %d", cnt)
     end
 
     if kind == "w_ammo" then
@@ -719,6 +798,8 @@ function RemoveItems(npc, section, amount, durability)
     else
         npc:iterate_ruck(itr_item, nil)
     end
+
+    SendScriptCallback("on_actor_inventory_update_finished")
 
     return cnt
 end
@@ -734,4 +815,17 @@ function ConvertPercentStrToNum(durStr)
     end
 
     return num / 100
+end
+
+-- CheckDurability compares durabilities. Expected non-percent form of arguments (d1 and d2 < 1)
+function CheckDurability(d1, d2)
+    if not d1 or not d2 then
+        return false
+    end
+
+    if type(d1) == "number" and type(d2) == "number" then
+        return math.floor(d1 * 100) == math.floor(d2 * 100)
+    end
+
+    return false
 end
