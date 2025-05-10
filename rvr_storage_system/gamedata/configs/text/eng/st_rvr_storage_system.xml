@@ -1,16 +1,54 @@
 <string_table>
+    <!-- MCM section -->
     <string id="ui_mcm_menu_rvr_storage_system">
         <text>Rvr Storage System</text>
     </string>
-    <string id="ui_mcm_example_text">
-        <text>Rvr Storage System</text>
+    <string id="ui_mcm_mod_desc">
+        <text>DESCRIPTION TODO</text>
     </string>
-    <string id="st_rvr_storage_inc">
-        <text>+</text>
+    
+    <string id="ui_mcm_rvr_storage_system_shift_mult_slider">
+        <text>LSHIFT put/withdraw multiplier</text>
     </string>
-    <string id="st_rvr_storage_dec">
-        <text>-</text>
+    <string id="ui_mcm_rvr_storage_system_shift_mult_slider_desc">
+        <text>Multiplies an amount of items if SHIFT is pressed. Multiplicative with CTRL.</text>
     </string>
+
+    <string id="ui_mcm_rvr_storage_system_ctrl_mult_slider">
+        <text>LCTRL put/withdraw multiplier</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_ctrl_mult_slider_desc">
+        <text>Multiplies an amount of items if CTRL is pressed. Multiplicative with SHIFT.</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_debug_mode_check">
+        <text>Enable debug mode</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_debug_mode_check_desc">
+        <text>Enables some debug/dev features and test storage interface on O key.</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_weapon_storage_check">
+        <text>EXPERIMENTAL: enable weapon storage</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_weapon_storage_check_desc">
+        <text>Partially implemented feature. Upgrades will be removed if stored, mag will be loaded, what leads to ammo duplication exploit.</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_armor_storage_check">
+        <text>EXPERIMENTAL: enable armor storage (upgrades will be removed if stored)</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_armor_storage_check_desc">
+        <text>Partially implemented feature. Upgrades will be removed if stored.</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_kinds_separators">
+        <text>EXPERIMENTAL: enable additional separators with item kinds (no localization)</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_kinds_separators_desc">
+        <text>Missing localization</text>
+    </string>
+
 
     <!-- Window titles -->
     <string id="st_rvr_ss_actor_inventory_title">

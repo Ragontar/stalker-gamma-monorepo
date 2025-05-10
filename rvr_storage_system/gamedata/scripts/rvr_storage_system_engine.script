@@ -12,6 +12,7 @@ function on_game_start()
     RegisterScriptCallback("on_storage_inventory_update_finished", on_storage_inventory_update_finished)
     RegisterScriptCallback("rvr_storage_actor_on_stash_create", rvr_storage_actor_on_stash_create)
     RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
+    RegisterScriptCallback("on_option_change", on_option_change)
 end
 
 local weight_unit = game.translate_string("st_kg")
@@ -44,22 +45,30 @@ SpawnerEventSource = "rvr_spawner_event_source"
 --- Config Section
 -----------
 
-cfg = {
-    dev_debug_mode = false,
+function GetCfg()
+    return {
+        dev_debug_mode = rvr_storage_system_mcm.get_config("debug_mode_check"),
 
-    ui_storage_min_reset_period_ms = 100,
-    ui_shift_multiplier = 5, -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
-    ui_ctrl_multiplier = 10, -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
+        ui_storage_min_reset_period_ms = 100,
+        ui_shift_multiplier = rvr_storage_system_mcm.get_config("shift_mult_slider"), -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
+        ui_ctrl_multiplier = rvr_storage_system_mcm.get_config("ctrl_mult_slider"),   -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
 
-    spawner_durability_set_delay_seconds = 0.1,
+        spawner_durability_set_delay_seconds = 0.1,
 
-    lister_item_width = 348, -- should be the same as list_box width
-    lister_enable_merged_kinds = true,
-    lister_enable_kinds_separators = false,
+        lister_item_width = 348, -- should be the same as list_box width
+        lister_enable_merged_kinds = true,
+        lister_enable_kinds_separators = rvr_storage_system_mcm.get_config("experimental_enable_kinds_separators"),
 
-    storage_enable_weapon = false, -- not fully implemented yet
-    storage_enable_armor = false,  -- not fully implemented yet
-}
+        storage_enable_weapon = rvr_storage_system_mcm.get_config("experimental_enable_weapon_storage_check"), -- not fully implemented yet
+        storage_enable_armor = rvr_storage_system_mcm.get_config("experimental_enable_armor_storage_check"),   -- not fully implemented yet
+    }
+end
+
+cfg = GetCfg()
+
+function on_option_change()
+    cfg = GetCfg()
+end
 
 -----------
 --- Config Section end

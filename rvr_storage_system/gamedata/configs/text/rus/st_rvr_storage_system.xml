@@ -5,69 +5,56 @@
     <string id="ui_mcm_example_text">
         <text>Rvr Storage System</text>
     </string>
-    <string id="st_rvr_storage_inc">
-        <text>+</text>
-    </string>
-    <string id="st_rvr_storage_dec">
-        <text>-</text>
-    </string>
 
     <!-- Window titles -->
     <string id="st_rvr_ss_actor_inventory_title">
-        <text>Рюкзак</text>
+        <text>ГђГѕГЄГ§Г ГЄ</text>
     </string>
     <string id="st_rvr_ss_storage_inventory_title">
-        <text>Хранилище</text>
+        <text>Г•Г°Г Г­ГЁГ«ГЁГ№ГҐ</text>
     </string>
     <string id="st_rvr_ss_durability_column_title">
-        <text>Состояние</text>
+        <text>Г‘Г®Г±ГІГ®ГїГ­ГЁГҐ</text>
     </string>
     <string id="st_rvr_ss_amount_column_title">
-        <text>Кол-во</text>
+        <text>ГЉГ®Г«-ГўГ®</text>
     </string>
 
 
     <!-- Categories -->
     <string id="st_c_weapons">
-        <text>Оружие</text>
+        <text>ГЋГ°ГіГ¦ГЁГҐ</text>
     </string>
     <string id="st_c_ammo">
-        <text>Амуниция</text>
+        <text>ГЂГ¬ГіГ­ГЁГ¶ГЁГї</text>
     </string>
     <string id="st_c_armor">
-        <text>Броня и шлемы</text>
+        <text>ГЃГ°Г®Г­Гї ГЁ ГёГ«ГҐГ¬Г»</text>
     </string>
     <string id="st_c_equipment">
-        <text>Снаряжение</text>
+        <text>Г‘Г­Г Г°ГїГ¦ГҐГ­ГЁГҐ</text>
     </string>
     <string id="st_c_tech">
-        <text>Техническое</text>
+        <text>Г’ГҐГµГ­ГЁГ·ГҐГ±ГЄГ®ГҐ</text>
     </string>
     <string id="st_c_trophies">
-        <text>Трофеи</text>
+        <text>Г’Г°Г®ГґГҐГЁ</text>
     </string>
     <string id="st_c_consumables">
-        <text>Расходуемое</text>
+        <text>ГђГ Г±ГµГ®Г¤ГіГҐГ¬Г®ГҐ</text>
     </string>
     <string id="st_c_misc">
-        <text>Прочее</text>
+        <text>ГЏГ°Г®Г·ГҐГҐ</text>
     </string>
     <string id="st_c_unknown">
-        <text>Неизвестно</text>
+        <text>ГЌГҐГЁГ§ГўГҐГ±ГІГ­Г®</text>
     </string>
 
 
     <string id="st_rvr_ss_mb_set_stash_created">
-        <text>Альтернативный тайник создан</text>
+        <text>ГЂГ«ГјГІГҐГ°Г­Г ГІГЁГўГ­Г»Г© ГІГ Г©Г­ГЁГЄ Г±Г®Г§Г¤Г Г­</text>
     </string>
     <string id="st_rvr_ss_mb_set_stash_type_text">
-        <text>Хотите создать альтернативный тип тайника? Если нет, то будет создан обычный.</text>
+        <text>Г•Г®ГІГЁГІГҐ Г±Г®Г§Г¤Г ГІГј Г Г«ГјГІГҐГ°Г­Г ГІГЁГўГ­Г»Г© ГІГЁГЇ ГІГ Г©Г­ГЁГЄГ ? Г…Г±Г«ГЁ Г­ГҐГІ, ГІГ® ГЎГіГ¤ГҐГІ Г±Г®Г§Г¤Г Г­ Г®ГЎГ»Г·Г­Г»Г©.</text>
     </string>
-
-    <!-- <string id="st_c_consumables">
-        <text>-</text>
-    </string>
-    <string id="st_c_consumables">
-        <text>-</text>
-    </string> -->
 </string_table>
