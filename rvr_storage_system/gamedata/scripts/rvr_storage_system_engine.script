@@ -1276,7 +1276,11 @@ function physic_object_on_use_callback(obj, who)
 
     CreateTimeEvent("UIStorage", "close_inventory_ui", 0, function()
         ui_inventory.hide_inventory()
-        ui_inventory.GUI = ui_inventory.UIInventory() -- because it's fucking magic
+        ui_inventory.GUI = ui_inventory.UIInventory() -- because it's a fucking magic
+
+        if zzz_rax_sortingplus_mcm then -- SortingPlus compatibility
+            zzz_rax_sortingplus_mcm.actor_on_first_update()
+        end
 
         start(stg)
 
