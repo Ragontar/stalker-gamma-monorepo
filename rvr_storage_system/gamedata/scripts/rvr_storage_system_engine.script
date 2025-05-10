@@ -85,7 +85,7 @@ categories = {
     { id = "c_ammo",        display_name = "st_c_ammo",        kinds = { "w_ammo" } },
     { id = "c_armor",       display_name = "st_c_armor",       kinds = { "o_heavy", "o_sci", "o_medium", "o_light", "o_helmet" } },
     { id = "c_equipment",   display_name = "st_c_equipment",   kinds = { "i_backpack", "i_device" } },
-    { id = "c_tech",        display_name = "st_c_tech",        kinds = { "i_tool", "i_repair", "i_upgrade", "i_kit" },                                                           opts = { hide_durability = true } },
+    { id = "c_tech",        display_name = "st_c_tech",        kinds = { "i_tool", "i_repair", "i_upgrade", "i_kit" },                                                           opts = { hide_durability = true, hide_durability_exceptions = { "i_tool" } } },
     { id = "c_trophies",    display_name = "st_c_trophies",    kinds = { "i_arty", "i_arty_junk", "i_arty_cont", "i_mutant_raw", "i_mutant_part", "i_mutant_belt" } },
     { id = "c_consumables", display_name = "st_c_consumables", kinds = { "i_food", "i_mutant_cooked", "i_drink", "i_medical" },                                                  opts = { hide_durability = true } },
     { id = "c_misc",        display_name = "st_c_misc",        kinds = { "i_letter", "i_quest", "i_misc", "i_part" } },
@@ -695,10 +695,19 @@ function Lister:HasDurability(section)
     local opts = cats[kind].opts or {}
 
     if opts.hide_durability then
-        return false
+        has_cond = false
+        local exceptions = opts.hide_durability_exceptions or {}
+
+        for _, ex in pairs(exceptions) do
+            if kind == ex then
+                has_cond = true
+
+                break
+            end
+        end
     end
 
-    return true
+    return has_cond
 end
 
 -- GetListElements returns ItemListElement table
@@ -1343,7 +1352,7 @@ if zatura_autostack then
     printf("zatura_autostack detected, detaching callback")
 
     orig_zatura_autostack_GUI_on_show = zatura_autostack.GUI_on_show
-    zatura_autostack.GUI_on_show = function (name)
+    zatura_autostack.GUI_on_show = function(name)
         CreateTimeEvent("UIStorage", "zatura_autostack_delay_callback_call", 0.1, function()
             if GUI and GUI:IsShown() then
                 return
@@ -1353,6 +1362,5 @@ if zatura_autostack then
 
             return true
         end)
-
     end
 end
