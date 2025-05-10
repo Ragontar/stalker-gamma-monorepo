@@ -13,6 +13,7 @@ function on_game_start()
     RegisterScriptCallback("rvr_storage_actor_on_stash_create", rvr_storage_actor_on_stash_create)
     RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
     RegisterScriptCallback("on_option_change", on_option_change)
+    RegisterScriptCallback("on_localization_change", on_localization_change)
 end
 
 local weight_unit = game.translate_string("st_kg")
@@ -140,6 +141,10 @@ function init()
     end
     InitDefaultStorages()
     InitActiveStorages()
+end
+
+function on_localization_change()
+    GUI = nil -- clear ui to force initing again
 end
 
 function actor_item_to_ruck()
