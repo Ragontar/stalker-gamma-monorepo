@@ -82,55 +82,55 @@ cfg = GetCfg()
 
 function GetCategories()
     local cats = {
-        ["c_weapons"] = {
+        {
             id = "c_weapons",
             display_name = "st_c_weapons",
             kinds = { "w_sniper", "w_rifle", "w_smg", "w_shotgun", "w_pistol", "w_melee", "w_misc", "w_base", "w_explosive" },
             opts = { hide_durability = false, hide_durability_exceptions = {} }
         },
-        ["c_ammo"] = {
+        {
             id = "c_ammo",
             display_name = "st_c_ammo",
             kinds = { "w_ammo" },
             opts = { hide_durability = false, hide_durability_exceptions = {} }
         },
-        ["c_armor"] = {
+        {
             id = "c_armor",
             display_name = "st_c_armor",
             kinds = { "o_heavy", "o_sci", "o_medium", "o_light", "o_helmet" },
             opts = { hide_durability = false, hide_durability_exceptions = {} }
         },
-        ["c_equipment"] = {
+        {
             id = "c_equipment",
             display_name = "st_c_equipment",
             kinds = { "i_backpack", "i_device" },
             opts = { hide_durability = false, hide_durability_exceptions = {} }
         },
-        ["c_tech"] = {
+        {
             id = "c_tech",
             display_name = "st_c_tech",
             kinds = { "i_tool", "i_repair", "i_upgrade", "i_kit" },
             opts = { hide_durability = true, hide_durability_exceptions = { ["i_tool"] = true, } }
         },
-        ["c_trophies"] = {
+        {
             id = "c_trophies",
             display_name = "st_c_trophies",
             kinds = { "i_arty", "i_arty_junk", "i_arty_cont", "i_mutant_raw", "i_mutant_part", "i_mutant_belt" },
             opts = { hide_durability = true, hide_durability_exceptions = {} }
         },
-        ["c_consumables"] = {
+        {
             id = "c_consumables",
             display_name = "st_c_consumables",
             kinds = { "i_food", "i_mutant_cooked", "i_drink", "i_medical" },
             opts = { hide_durability = true, hide_durability_exceptions = {} }
         },
-        ["c_misc"] = {
+        {
             id = "c_misc",
             display_name = "st_c_misc",
             kinds = { "i_letter", "i_quest", "i_misc", "i_part" },
             opts = { hide_durability = false, hide_durability_exceptions = {} }
         },
-        ["c_unknown"] = {
+        {
             id = "c_unknown",
             display_name = "st_c_unknown",
             kinds = { "unknown" },
@@ -138,20 +138,16 @@ function GetCategories()
         },
     }
 
-    local cats_by_kind = GetCategoriesByKind(cats)
-
     if cfg.ui_show_arts_condition then
         local kinds = { "i_arty", "i_arty_cont", "i_arty_junk" }
 
         for _, k in pairs(kinds) do
-            -- cats[cats_by_kind[k]].opts.hide_durability = false
-            cats[cats_by_kind[k].id].opts.hide_durability_exceptions[k] = true
+            AddKindToHideDurabilityExceptions(cats, k)
         end
     end
 
     if cfg.ui_show_pelts_condition then
-        -- cats[cats_by_kind["i_mutant_belt"]].opts.hide_durability = false
-        cats[cats_by_kind["i_mutant_belt"].id].opts.hide_durability_exceptions["i_mutant_belt"] = true
+        AddKindToHideDurabilityExceptions(cats, "i_mutant_belt")
     end
 
     return cats
@@ -1290,6 +1286,22 @@ function GetCategoriesOrder()
     end
 
     return order
+end
+
+function AddKindToHideDurabilityExceptions(cats, kind)
+    if not kind then
+        return
+    end
+
+    for _, cat in pairs(cats) do
+        for _, k in pairs(cat.kinds) do
+            if k == kind then
+                cat.opts.hide_durability_exceptions = cat.opts.hide_durability_exceptions or {}
+                cat.opts.hide_durability_exceptions[k] = true
+                break
+            end
+        end
+    end
 end
 
 local K_Timer = false
