@@ -1,21 +1,84 @@
+local defaults = {
+    ["shift_mult_slider"] = 5,
+    ["ctrl_mult_slider"] = 10,
+    -- ["enable_categories_separators"] = true,
+    ["debug_mode_check"] = false,
+    ["experimental_enable_weapon_storage_check"] = false,
+    ["experimental_enable_armor_storage_check"] = false,
+    ["experimental_enable_kinds_separators"] = false
+}
+
+function get_config(key)
+    if ui_mcm then return ui_mcm.get("rvr_storage_system/" .. key) else return defaults[key] end
+end
+
+-- val: 0 - string, 1 - bool, 2 - float
+
 function on_mcm_load()
     op = {
         id = "rvr_storage_system",
         sh = true,
         gr = { -- options tree goes here
-        {
-            id = "title1",
-            type = "slide",
-            link = "AMCM_Banner.dds",
-            text = "ui_mcm_example_text",
-            size = {512, 50},
-            spacing = 20
-        }, {
-            id = "value_1",
-            type = "input",
-            val = 2,
-            def = some_value_here
-        }}
+            -- {
+            --     id = "mod_desc",
+            --     type = "desc",
+            --     text = "ui_mcm_mod_desc",
+            --     size = { 512, 50 },
+            --     spacing = 20
+            -- },
+            {
+                id = "shift_mult_slider",
+                type = "track",
+                val = 2,
+                min = 1.0,
+                max = 25.0,
+                step = 1.0,
+                def = 5.0
+            },
+            {
+                id = "ctrl_mult_slider",
+                type = "track",
+                val = 2,
+                min = 1.0,
+                max = 50.0,
+                step = 1.0,
+                def = 10.0
+            },
+            -- {
+            --     id = "enable_categories_separators",
+            --     type = "check",
+            --     val = 1,
+            --     def = true
+            -- },
+            {
+                id = "experimental_separator",
+                type = "line"
+            },
+            {
+                id = "experimental_enable_weapon_storage_check",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "experimental_enable_armor_storage_check",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "experimental_enable_kinds_separators",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "debug_mode_check",
+                type = "check",
+                val = 1,
+                def = false
+            },
+        }
     }
 
     return op
