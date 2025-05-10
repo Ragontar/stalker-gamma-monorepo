@@ -8,60 +8,53 @@
 
     <!-- Window titles -->
     <string id="st_rvr_ss_actor_inventory_title">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Ðþêçàê</text>
     </string>
     <string id="st_rvr_ss_storage_inventory_title">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Õðàíèëèùå</text>
     </string>
     <string id="st_rvr_ss_durability_column_title">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Ñîñòîÿíèå</text>
     </string>
     <string id="st_rvr_ss_amount_column_title">
-        <text>ï¿½ï¿½ï¿½-ï¿½ï¿½</text>
+        <text>Êîë-âî</text>
     </string>
 
 
     <!-- Categories -->
     <string id="st_c_weapons">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Îðóæèå</text>
     </string>
     <string id="st_c_ammo">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Àìóíèöèÿ</text>
     </string>
     <string id="st_c_armor">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Áðîíÿ è øëåìû</text>
     </string>
     <string id="st_c_equipment">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Ñíàðÿæåíèå</text>
     </string>
     <string id="st_c_tech">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Òåõíè÷åñêîå</text>
     </string>
     <string id="st_c_trophies">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Òðîôåè</text>
     </string>
     <string id="st_c_consumables">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Ðàñõîäóåìîå</text>
     </string>
     <string id="st_c_misc">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Ïðî÷åå</text>
     </string>
     <string id="st_c_unknown">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Íåèçâåñòíî</text>
     </string>
 
 
     <string id="st_rvr_ss_mb_set_stash_created">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</text>
+        <text>Àëüòåðíàòèâíûé òàéíèê ñîçäàí</text>
     </string>
     <string id="st_rvr_ss_mb_set_stash_type_text">
-        <text>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½? ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.</text>
+        <text>Õîòèòå ñîçäàòü àëüòåðíàòèâíûé òèï òàéíèêà? Åñëè íåò, òî áóäåò ñîçäàí îáû÷íûé.</text>
     </string>
-
-    <!-- <string id="st_c_consumables">
-        <text>-</text>
-    </string>
-    <string id="st_c_consumables">
-        <text>-</text>
-    </string> -->
 </string_table>
