@@ -20,6 +20,13 @@
         <text>Óìíîæàåò êîëè÷åñòâî ïåðåíîñèìûõ ïðåäìåòîâ, åñëè íàæàòà êëàâèøà SHIFT. Óìíîæàåòñÿ ñ ìíîæèòåëåì îò CTRL.</text>
     </string>
 
+    <string id="ui_mcm_rvr_storage_system_show_pelts_condition_check">
+        <text>Îòîáðàæàòü ñîñòîÿíèå øêóð ìóòàíòîâ</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_show_arts_condition_check">
+        <text>Îòîáðàæàòü ñîñòîÿíèå àðòåôàêòîâ, âêëþ÷àÿ íàõîäÿùèåñÿ â êîíòåéíåðàõ</text>
+    </string>
+
     <string id="ui_mcm_rvr_storage_system_ctrl_mult_slider">
         <text>Ìíîæèòåëü êîëè÷åñòâà ïðåäìåòîâ ÷åðåç LCTRL</text>
     </string>

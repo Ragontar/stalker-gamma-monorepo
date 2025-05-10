@@ -18,6 +18,13 @@
         <text>Multiplies an amount of items if SHIFT is pressed. Multiplicative with CTRL.</text>
     </string>
 
+    <string id="ui_mcm_rvr_storage_system_show_pelts_condition_check">
+        <text>Show mutant pelts conditions</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_show_arts_condition_check">
+        <text>Show artifacts (containers included) conditions</text>
+    </string>
+
     <string id="ui_mcm_rvr_storage_system_ctrl_mult_slider">
         <text>LCTRL put/withdraw multiplier</text>
     </string>
