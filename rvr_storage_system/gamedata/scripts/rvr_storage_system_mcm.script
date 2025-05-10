@@ -19,12 +19,28 @@ function on_mcm_load()
         id = "rvr_storage_system",
         sh = true,
         gr = { -- options tree goes here
+            {
+                id = "mod_banner",
+                type = "slide",
+                link = "AMCM_Banner.dds",
+                size = { 512, 50 },
+                spacing = 20
+            },
             -- {
             --     id = "mod_desc",
             --     type = "desc",
-            --     text = "ui_mcm_mod_desc",
+            --     text = "",
             --     size = { 512, 50 },
             --     spacing = 20
+            -- },
+            {
+                id = "main_options_title",
+                type = "title",
+                text = "ui_mcm_main_options_title",
+            },
+            -- {
+            --     id = "main_options_separator",
+            --     type = "line"
             -- },
             {
                 id = "shift_mult_slider",
@@ -53,6 +69,11 @@ function on_mcm_load()
             {
                 id = "experimental_separator",
                 type = "line"
+            },
+            {
+                id = "experimental_title",
+                type = "title",
+                text = "ui_mcm_experimental_title",
             },
             {
                 id = "experimental_enable_weapon_storage_check",

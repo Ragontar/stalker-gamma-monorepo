@@ -6,7 +6,11 @@
     <string id="ui_mcm_mod_desc">
         <text>DESCRIPTION TODO</text>
     </string>
-    
+
+    <string id="ui_mcm_main_options_title">
+        <text>Options</text>
+    </string>
+
     <string id="ui_mcm_rvr_storage_system_shift_mult_slider">
         <text>LSHIFT put/withdraw multiplier</text>
     </string>
@@ -19,6 +23,10 @@
     </string>
     <string id="ui_mcm_rvr_storage_system_ctrl_mult_slider_desc">
         <text>Multiplies an amount of items if CTRL is pressed. Multiplicative with SHIFT.</text>
+    </string>
+
+    <string id="ui_mcm_experimental_title">
+        <text>Experimental section</text>
     </string>
 
     <string id="ui_mcm_rvr_storage_system_debug_mode_check">
