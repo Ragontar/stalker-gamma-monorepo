@@ -3,6 +3,9 @@ AddScriptCallback("on_storage_inventory_update_finished")
 AddScriptCallback("rvr_storage_actor_on_stash_create")
 
 function on_game_start()
+    cfg = GetCfg()
+    categories = GetCategories()
+
     RegisterScriptCallback("actor_on_first_update", init)
     RegisterScriptCallback("on_key_press", on_key_press)
     RegisterScriptCallback("save_state", save_state)
@@ -53,6 +56,8 @@ function GetCfg()
         ui_storage_min_reset_period_ms = 100,
         ui_shift_multiplier = rvr_storage_system_mcm.get_config("shift_mult_slider"), -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
         ui_ctrl_multiplier = rvr_storage_system_mcm.get_config("ctrl_mult_slider"),   -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
+        ui_show_pelts_condition = rvr_storage_system_mcm.get_config("show_pelts_condition_check"),
+        ui_show_arts_condition = rvr_storage_system_mcm.get_config("show_arts_condition_check"),
 
         spawner_durability_set_delay_seconds = 0.1,
 
@@ -67,10 +72,6 @@ end
 
 cfg = GetCfg()
 
-function on_option_change()
-    cfg = GetCfg()
-end
-
 -----------
 --- Config Section end
 -----------
@@ -79,18 +80,84 @@ end
 --- Categories
 -----
 
--- ! This category order will also be used in UI
-categories = {
-    { id = "c_weapons",     display_name = "st_c_weapons",     kinds = { "w_sniper", "w_rifle", "w_smg", "w_shotgun", "w_pistol", "w_melee", "w_misc", "w_base", "w_explosive" } },
-    { id = "c_ammo",        display_name = "st_c_ammo",        kinds = { "w_ammo" } },
-    { id = "c_armor",       display_name = "st_c_armor",       kinds = { "o_heavy", "o_sci", "o_medium", "o_light", "o_helmet" } },
-    { id = "c_equipment",   display_name = "st_c_equipment",   kinds = { "i_backpack", "i_device" } },
-    { id = "c_tech",        display_name = "st_c_tech",        kinds = { "i_tool", "i_repair", "i_upgrade", "i_kit" },                                                           opts = { hide_durability = true, hide_durability_exceptions = { "i_tool" } } },
-    { id = "c_trophies",    display_name = "st_c_trophies",    kinds = { "i_arty", "i_arty_junk", "i_arty_cont", "i_mutant_raw", "i_mutant_part", "i_mutant_belt" } },
-    { id = "c_consumables", display_name = "st_c_consumables", kinds = { "i_food", "i_mutant_cooked", "i_drink", "i_medical" },                                                  opts = { hide_durability = true } },
-    { id = "c_misc",        display_name = "st_c_misc",        kinds = { "i_letter", "i_quest", "i_misc", "i_part" } },
-    { id = "c_unknown",     display_name = "st_c_unknown",     kinds = { "unknown" } },
-}
+function GetCategories()
+    local cats = {
+        ["c_weapons"] = {
+            id = "c_weapons",
+            display_name = "st_c_weapons",
+            kinds = { "w_sniper", "w_rifle", "w_smg", "w_shotgun", "w_pistol", "w_melee", "w_misc", "w_base", "w_explosive" },
+            opts = { hide_durability = false, hide_durability_exceptions = {} }
+        },
+        ["c_ammo"] = {
+            id = "c_ammo",
+            display_name = "st_c_ammo",
+            kinds = { "w_ammo" },
+            opts = { hide_durability = false, hide_durability_exceptions = {} }
+        },
+        ["c_armor"] = {
+            id = "c_armor",
+            display_name = "st_c_armor",
+            kinds = { "o_heavy", "o_sci", "o_medium", "o_light", "o_helmet" },
+            opts = { hide_durability = false, hide_durability_exceptions = {} }
+        },
+        ["c_equipment"] = {
+            id = "c_equipment",
+            display_name = "st_c_equipment",
+            kinds = { "i_backpack", "i_device" },
+            opts = { hide_durability = false, hide_durability_exceptions = {} }
+        },
+        ["c_tech"] = {
+            id = "c_tech",
+            display_name = "st_c_tech",
+            kinds = { "i_tool", "i_repair", "i_upgrade", "i_kit" },
+            opts = { hide_durability = true, hide_durability_exceptions = { ["i_tool"] = true, } }
+        },
+        ["c_trophies"] = {
+            id = "c_trophies",
+            display_name = "st_c_trophies",
+            kinds = { "i_arty", "i_arty_junk", "i_arty_cont", "i_mutant_raw", "i_mutant_part", "i_mutant_belt" },
+            opts = { hide_durability = true, hide_durability_exceptions = {} }
+        },
+        ["c_consumables"] = {
+            id = "c_consumables",
+            display_name = "st_c_consumables",
+            kinds = { "i_food", "i_mutant_cooked", "i_drink", "i_medical" },
+            opts = { hide_durability = true, hide_durability_exceptions = {} }
+        },
+        ["c_misc"] = {
+            id = "c_misc",
+            display_name = "st_c_misc",
+            kinds = { "i_letter", "i_quest", "i_misc", "i_part" },
+            opts = { hide_durability = false, hide_durability_exceptions = {} }
+        },
+        ["c_unknown"] = {
+            id = "c_unknown",
+            display_name = "st_c_unknown",
+            kinds = { "unknown" },
+            opts = { hide_durability = false, hide_durability_exceptions = {} }
+        },
+    }
+
+    local cats_by_kind = GetCategoriesByKind(cats)
+
+    if cfg.ui_show_arts_condition then
+        local kinds = { "i_arty", "i_arty_cont", "i_arty_junk" }
+
+        for _, k in pairs(kinds) do
+            -- cats[cats_by_kind[k]].opts.hide_durability = false
+            cats[cats_by_kind[k].id].opts.hide_durability_exceptions[k] = true
+        end
+    end
+
+    if cfg.ui_show_pelts_condition then
+        -- cats[cats_by_kind["i_mutant_belt"]].opts.hide_durability = false
+        cats[cats_by_kind["i_mutant_belt"].id].opts.hide_durability_exceptions["i_mutant_belt"] = true
+    end
+
+    return cats
+end
+
+categories = nil
 
 -----
 --- Categories end
@@ -151,6 +218,11 @@ function actor_item_to_ruck()
     if GUI and GUI:IsShown() then
         GUI:Reset()
     end
+end
+
+function on_option_change()
+    cfg = GetCfg()
+    categories = GetCategories()
 end
 
 function on_actor_inventory_update_finished()
@@ -686,25 +758,13 @@ end
 
 function Lister:HasDurability(section)
     local has_cond = SYS_GetParam(1, section, "use_condition") or false
-    if not has_cond then
-        return false
-    end
 
     local kind = SYS_GetParam(0, section, "kind") or "unknown"
     local cats = GetCategoriesByKind()
     local opts = cats[kind].opts or {}
 
     if opts.hide_durability then
-        has_cond = false
-        local exceptions = opts.hide_durability_exceptions or {}
-
-        for _, ex in pairs(exceptions) do
-            if kind == ex then
-                has_cond = true
-
-                break
-            end
-        end
+        has_cond = opts.hide_durability_exceptions[kind] or false
     end
 
     return has_cond
@@ -744,7 +804,7 @@ function Lister:Sort(elements, opts)
                 if bk[kind] then
                     if cfg.lister_enable_kinds_separators then
                         -- add kind separator
-                        local name = game.translate_string("st_" .. kind) or "st_" .. kind
+                        local name = game.translate_string("st_" .. kind) or ("st_" .. kind)
                         table.insert(result, self:MakeKindElement(name))
                     end
 
@@ -1196,9 +1256,10 @@ function CheckDurability(d1, d2)
     return false
 end
 
-function GetCategoriesByKind()
+function GetCategoriesByKind(cats)
+    cats = cats or categories or {}
     local cat_index = {}
-    for _, cat in pairs(categories) do
+    for _, cat in pairs(cats) do
         for _, knd in pairs(cat.kinds) do
             cat_index[knd] = cat
         end
@@ -1278,7 +1339,7 @@ function physic_object_on_use_callback(obj, who)
         ui_inventory.hide_inventory()
         ui_inventory.GUI = ui_inventory.UIInventory() -- because it's a fucking magic
 
-        if zzz_rax_sortingplus_mcm then -- SortingPlus compatibility
+        if zzz_rax_sortingplus_mcm then               -- SortingPlus compatibility
             zzz_rax_sortingplus_mcm.actor_on_first_update()
         end
 
