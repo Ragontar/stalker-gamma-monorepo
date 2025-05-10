@@ -1,11 +1,62 @@
 <?xml version="1.0" encoding="windows-1251"?>
 
 <string_table>
+    <!-- MCM section -->
     <string id="ui_mcm_menu_rvr_storage_system">
         <text>Rvr Storage System</text>
     </string>
-    <string id="ui_mcm_example_text">
-        <text>Rvr Storage System</text>
+    <string id="ui_mcm_mod_desc">
+        <text>DESCRIPTION TODO</text>
+    </string>
+
+    <string id="ui_mcm_main_options_title">
+        <text>Íàñòðîéêè</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_shift_mult_slider">
+        <text>Ìíîæèòåëü êîëè÷åñòâà ïðåäìåòîâ ÷åðåç LSHIFT</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_shift_mult_slider_desc">
+        <text>Óìíîæàåò êîëè÷åñòâî ïåðåíîñèìûõ ïðåäìåòîâ, åñëè íàæàòà êëàâèøà SHIFT. Óìíîæàåòñÿ ñ ìíîæèòåëåì îò CTRL.</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_ctrl_mult_slider">
+        <text>Ìíîæèòåëü êîëè÷åñòâà ïðåäìåòîâ ÷åðåç LCTRL</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_ctrl_mult_slider_desc">
+        <text>Óìíîæàåò êîëè÷åñòâî ïåðåíîñèìûõ ïðåäìåòîâ, åñëè íàæàòà êëàâèøà CTRL. Óìíîæàåòñÿ ñ ìíîæèòåëåì îò SHIFT.</text>
+    </string>
+
+    <string id="ui_mcm_experimental_title">
+        <text>Íàñòðîéêè ýêñïåðèìåíòàëüíûõ ôóíêöèé</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_debug_mode_check">
+        <text>Ðåæèì ðàçðàáîò÷èêà</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_debug_mode_check_desc">
+        <text>Âêëþ÷àåò äîïîëíèòåëüíóþ îòëàäî÷íóþ èíôîðìàöèþ è òåñòîâîå õðàíèëèùå, âûçûâàåìîå íàæàòèåì Î.</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_weapon_storage_check">
+        <text>Â ÐÀÇÐÀÁÎÒÊÅ: âêëþ÷èòü ïîääåðæêó õðàíåíèÿ îðóæèÿ</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_weapon_storage_check_desc">
+        <text>×àñòè÷íàÿ ðåàëèçàöèÿ. Ïðè ïåðåìåùåíèè â õðàíèëèùå èñ÷åçíóò óëó÷øåíèÿ, íàâåñíîå îáîðóäîâàíèå, ìàãàçèí áóäåò çàïîëíåí ñòàíäàðòíûìè ïàòðîíàìè. Ïîòåíöèàëüíûé äþï ïàòðîíîâ.</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_armor_storage_check">
+        <text>Â ÐÀÇÐÀÁÎÒÊÅ: âêëþ÷èòü ïîääåðæêó õðàíåíèÿ áðîíè</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_armor_storage_check_desc">
+        <text>×àñòè÷íàÿ ðåàëèçàöèÿ. Ïðè ïåðåìåùåíèè â õðàíèëèùå èñ÷åçíóò óëó÷øåíèÿ.</text>
+    </string>
+
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_kinds_separators">
+        <text>Â ÐÀÇÐÀÁÎÒÊÅ: âêëþ÷èòü äîïîëíèòåëüíûå ðàçäåëèòåëè ïî òèïó ïðåäìåòîâ</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_experimental_enable_kinds_separators_desc">
+        <text>Îòñóòñòâóåò ëîêàëèçàöèÿ.</text>
     </string>
 
     <!-- Window titles -->
