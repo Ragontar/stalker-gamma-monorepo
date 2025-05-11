@@ -283,6 +283,9 @@ function on_key_press(dik)
     if dik == DIK_keys.DIK_LSHIFT then
         is_shift_pressed = true
     end
+    if dik == DIK_keys.DIK_LCONTROL then
+        is_control_pressed = true
+    end
 
     local bind = dik_to_bind(dik)
     if bind == key_bindings.kINVENTORY then
@@ -297,6 +300,9 @@ end
 function on_key_release(dik)
     if dik == DIK_keys.DIK_LSHIFT then
         is_shift_pressed = false
+    end
+    if dik == DIK_keys.DIK_LCONTROL then
+        is_control_pressed = false
     end
 end
 
@@ -425,6 +431,16 @@ function UIStorage:InitControls()
     self:Register(self.storage_inv, "move_storage_item_db_click")
 
     self:InitControls_CategorySelector(xml)
+    self:InitControls_Searchbox(xml)
+end
+
+function UIStorage:InitControls_Searchbox(xml)
+    self.stg_searchbox_d       = xml:InitStatic("stg_searchbox", self)
+    self.stg_searchbox_d_frame = xml:InitFrame("stg_searchbox:frame_base", self.stg_searchbox_d)
+    self.searchbox             = xml:InitEditBox("stg_searchbox:input_searchbox", self.stg_searchbox_d_frame)
+    self:Register(self.searchbox, "input_searchbox")
+    -- self.searchbox:CaptureFocus(true)
+    self:AddCallback("input_searchbox", ui_events.EDIT_TEXT_COMMIT, self.OnNameSearchboxCommit, self)
 end
 
 function UIStorage:InitControls_CategorySelector(xml)
@@ -487,6 +503,7 @@ end
 
 function UIStorage:Commons_Init()
     self.selected_cat = nil
+    self.name_filter_str = nil
 end
 
 -- Test bank mode
@@ -555,6 +572,7 @@ function UIStorage:Reset(force)
 
     self.actor_inv:SetScrollPos(actor_inv_pos)
     self.storage_inv:SetScrollPos(storage_inv_pos)
+    -- self.searchbox:CaptureFocus(searchbox_focus or false)
 end
 
 -- Refresh UNIMPLEMENTED update counters without reset.
@@ -569,6 +587,11 @@ function UIStorage:RenderStorageInv()
     if self.selected_cat then
         printf("RenderStorageInv: selected_cat defined")
         opts.only_categories = { self.selected_cat }
+    end
+
+    if self.name_filter_str then
+        printf("RenderStorageInv: name_filter_str defined")
+        opts.name_filter_str = self.name_filter_str
     end
 
     local lister = Lister():FromStorage(self.storage, opts)
@@ -590,6 +613,11 @@ function UIStorage:RenderActorInv()
     if self.selected_cat then
         printf("RenderActorInv: selected_cat defined")
         opts.only_categories = { self.selected_cat }
+    end
+
+    if self.name_filter_str then
+        printf("RenderActorInv: name_filter_str defined")
+        opts.name_filter_str = self.name_filter_str
     end
 
     local lister = Lister():FromNPCInv(inv, opts)
@@ -647,6 +675,20 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
 
             return
         end
+
+        if dik == DIK_keys.DIK_F then
+            if is_control_pressed then
+                CreateTimeEvent("UIStorage", "remove_initial_inputs", 0.2,
+                    function() -- capture focus via hotkey causes initial input. Handle it.
+                        if is_shift_pressed then
+                            self.searchbox:SetText("")
+                        end
+                        self.searchbox:CaptureFocus(true)
+
+                        return true
+                    end)
+            end
+        end
     end
 
     if keyboard_action == ui_events.WINDOW_KEY_RELEASED then
@@ -663,12 +705,8 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
         end
     end
 
-    -- if keyboard_action == ui_events.WINDOW_LBUTTON_UP then
-    --     self:Reset()
-    -- end
-
     local bind = dik_to_bind(dik)
-    if bind == key_bindings.kINVENTORY or bind == key_bindings.kUSE then
+    if (bind == key_bindings.kINVENTORY or bind == key_bindings.kUSE) and not (is_shift_pressed or is_control_pressed) then
         if self:IsShown() and keybind_pass() then
             self:Close()
         end
@@ -686,6 +724,21 @@ function UIStorage:OnFilterCategory(cat)
         printf("OnFilterCategory cat=%s", cat.id)
         self.selected_cat = cat
     end
+
+    self:Reset(true)
+end
+
+function UIStorage:OnNameSearchboxCommit()
+    printf("OnNameSearchboxCommit call")
+
+    local text = self.searchbox:GetText()
+    if text and text ~= "" then
+        self.name_filter_str = string.lower(text)
+    else
+        self.name_filter_str = nil
+    end
+
+    printf("OnNameSearchboxCommit text=%s", self.name_filter_str)
 
     self:Reset(true)
 end
@@ -844,9 +897,7 @@ function Lister:FromNPCInv(inv, opts)
         return nil
     end
 
-    if opts then
-        self.only_categories = opts.only_categories
-    end
+    self:SetOpts(opts)
 
     for sec, by_sec in pairs(inv) do
         for durability, by_durability in pairs(by_sec) do
@@ -870,9 +921,7 @@ function Lister:FromStorage(storage, opts)
         return nil
     end
 
-    if opts then
-        self.only_categories = opts.only_categories
-    end
+    self:SetOpts(opts)
 
     for sec, by_durability in pairs(storage:GetContent()) do
         for durability, item in pairs(by_durability) do
@@ -887,6 +936,15 @@ function Lister:FromStorage(storage, opts)
     end
 
     return self
+end
+
+function Lister:SetOpts(opts)
+    if not opts then
+        return
+    end
+
+    self.only_categories = opts.only_categories
+    self.name_filter_str = opts.name_filter_str
 end
 
 function Lister:MakeListElement(section, width, name, durability, amount, opts)
@@ -961,7 +1019,14 @@ function Lister:Sort(elements, opts)
                     end
 
                     for _, el in pairs(bk[kind]) do
+                        printdbg("trying to filter %s with search=%s", el.name, self.name_filter_str)
+                        if not string.match(string.lower(el.name), self.name_filter_str or "") then
+                            printdbg("filtered out %s", el.name)
+                            goto skip_element
+                        end
+
                         table.insert(result, el)
+                        ::skip_element::
                     end
                 end
             end
