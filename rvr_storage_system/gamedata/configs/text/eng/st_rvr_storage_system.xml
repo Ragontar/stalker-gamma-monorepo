@@ -32,6 +32,14 @@
         <text>Multiplies an amount of items if CTRL is pressed. Multiplicative with SHIFT.</text>
     </string>
 
+    <string id="ui_mcm_rvr_storage_system_global_storage_enabled_check">
+        <text>Enable global storage</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_global_storage_enabled_check_desc">
+        <text>Enables additional storage, accessible from anywhere. [SHIFT+I]</text>
+    </string>
+
+
     <string id="ui_mcm_experimental_title">
         <text>Experimental section</text>
     </string>

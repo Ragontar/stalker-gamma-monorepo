@@ -34,6 +34,13 @@
         <text>Óìíîæàåò êîëè÷åñòâî ïåðåíîñèìûõ ïðåäìåòîâ, åñëè íàæàòà êëàâèøà CTRL. Óìíîæàåòñÿ ñ ìíîæèòåëåì îò SHIFT.</text>
     </string>
 
+    <string id="ui_mcm_rvr_storage_system_global_storage_enabled_check">
+        <text>Âêëþ÷èòü ãëîáàëüíîå õðàíèëèùå</text>
+    </string>
+    <string id="ui_mcm_rvr_storage_system_global_storage_enabled_check_desc">
+        <text>Âêëþ÷àåò äîïîëíèòåëüíîå õðàíèëèùå, äîñòóïíîå îòêóäà óãîäíî. [SHIFT+I]</text>
+    </string>
+
     <string id="ui_mcm_experimental_title">
         <text>Íàñòðîéêè ýêñïåðèìåíòàëüíûõ ôóíêöèé</text>
     </string>

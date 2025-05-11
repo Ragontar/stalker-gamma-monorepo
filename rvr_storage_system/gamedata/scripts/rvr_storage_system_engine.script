@@ -8,6 +8,7 @@ function on_game_start()
 
     RegisterScriptCallback("actor_on_first_update", init)
     RegisterScriptCallback("on_key_press", on_key_press)
+    RegisterScriptCallback("on_key_release", on_key_release)
     RegisterScriptCallback("save_state", save_state)
     RegisterScriptCallback("load_state", load_state)
     -- RegisterScriptCallback("actor_item_to_ruck", actor_item_to_ruck)
@@ -31,19 +32,26 @@ local snd_attach_addon = sound_object([[interface\inv_attach_addon]])
 local snd_detach_addon = sound_object([[interface\inv_detach_addon]])
 local snd_item_use = sound_object([[interface\inv_none]])
 
-local mode_bank = "bank"
-local mode_test_bank = "test_bank"
-local mode_generic_container = "generic_container"
-local mode_ammo_container = "ammo_container"
-local mode_med_container = "med_container"
-local mode_mats_container = "mats_container"
+mode_bank = "bank"
+mode_test_bank = "test_bank"
+mode_generic_container = "generic_container"
+mode_ammo_container = "ammo_container"
+mode_med_container = "med_container"
+mode_mats_container = "mats_container"
+mode_global_storage = "global_storage"
 -- possible variants: artifacts, w/a parts (has durability, seems bad)
 
 RVRData = nil
 GUI = nil
 ActiveStorages = nil
 
+is_shift_pressed = false
+is_ctrl_pressed = false
+is_alt_pressed = false
+
 SpawnerEventSource = "rvr_spawner_event_source"
+
+global_storage_key = "global_storage"
 
 -----------
 --- Config Section
@@ -58,6 +66,8 @@ function GetCfg()
         ui_ctrl_multiplier = rvr_storage_system_mcm.get_config("ctrl_mult_slider"),   -- multipliers from shift and ctrl are multiplicative. E.g. ctrl(x10) + shift(x5) = x10 * x5 = x50
         ui_show_pelts_condition = rvr_storage_system_mcm.get_config("show_pelts_condition_check"),
         ui_show_arts_condition = rvr_storage_system_mcm.get_config("show_arts_condition_check"),
+
+        feature_global_storage = rvr_storage_system_mcm.get_config("global_storage_enabled_check"),
 
         spawner_durability_set_delay_seconds = 0.1,
 
@@ -177,6 +187,8 @@ function start(storage)
             GUI:BankMode_Init(storage)
         elseif mode == mode_test_bank then
             GUI:TestBankMode_Init(storage)
+        elseif mode == mode_global_storage then
+            GUI:GlobalStorageMode_Init(storage)
         elseif mode == mode_generic_container then
             GUI:GenericCMode_Init(storage)
         elseif mode == mode_ammo_container then
@@ -238,7 +250,6 @@ function on_storage_inventory_update_finished(storage)
     if GUI and GUI:IsShown() then
         GUI:Reset()
     end
-
 end
 
 -- Function called when a key is pressed
@@ -248,12 +259,23 @@ function on_key_press(dik)
             start(ActiveStorages["test_bank"])
         end
     end
+    if dik == DIK_keys.DIK_LSHIFT then
+        is_shift_pressed = true
+    end
 
     local bind = dik_to_bind(dik)
-    if bind == key_bindings.kUSE then
-       --todo
+    if bind == key_bindings.kINVENTORY then
+        if cfg.feature_global_storage and is_shift_pressed then
+            start(ActiveStorages[global_storage_key])
+        end
 
         return
+    end
+end
+
+function on_key_release(dik)
+    if dik == DIK_keys.DIK_LSHIFT then
+        is_shift_pressed = false
     end
 end
 
@@ -400,6 +422,17 @@ function UIStorage:TestBankMode_Init(storage)
     self.multiplier = 1
 
     self:LogTr("TestBankMode_Init call")
+    self:Log("storage params: id=%s | weight_limit=%s", tostring(storage:GetID()), tostring(storage:GetWeightLimit()))
+
+    self:Reset()
+end
+
+function UIStorage:GlobalStorageMode_Init(storage)
+    self.mode = mode_global_storage
+    self.storage = storage
+    self.multiplier = 1
+
+    self:LogTr("GlobalStorageMode_Init call")
     self:Log("storage params: id=%s | weight_limit=%s", tostring(storage:GetID()), tostring(storage:GetWeightLimit()))
 
     self:Reset()
@@ -1048,6 +1081,15 @@ function InitDefaultStorages()
             }
         }
     end
+
+    if RVRData.Storages[global_storage_key] == nil then
+        RVRData.Storages[global_storage_key] = {
+            id = global_storage_key,
+            mode = mode_global_storage,
+            weight_limit = 0,
+            content = {}
+        }
+    end
 end
 
 -- CreateNewStorage creates new persistent storage. Overrides if exists.
@@ -1064,6 +1106,12 @@ end
 
 function MakeStorageFromData(mode, params)
     if mode == mode_test_bank then
+        local st = Storage(params.id, params.weight_limit, params.content, mode)
+
+        return st
+    end
+
+    if mode == mode_global_storage then
         local st = Storage(params.id, params.weight_limit, params.content, mode)
 
         return st

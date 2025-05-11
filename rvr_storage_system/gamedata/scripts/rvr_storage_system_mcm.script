@@ -3,6 +3,7 @@ local defaults = {
     ["ctrl_mult_slider"] = 10,
     ["show_arts_condition_check"] = false,
     ["show_pelts_condition_check"] = false,
+    ["global_storage_enabled_check"] = false,
     -- ["enable_categories_separators"] = true,
     ["debug_mode_check"] = false,
     ["experimental_enable_weapon_storage_check"] = false,
@@ -70,6 +71,12 @@ function on_mcm_load()
             },
             {
                 id = "show_arts_condition_check",
+                type = "check",
+                val = 1,
+                def = false
+            },
+            {
+                id = "global_storage_enabled_check",
                 type = "check",
                 val = 1,
                 def = false
