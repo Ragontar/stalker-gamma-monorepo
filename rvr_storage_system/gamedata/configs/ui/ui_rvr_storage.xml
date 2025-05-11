@@ -1,19 +1,39 @@
 <w>
-	<stg_category_selector x="40" y="40" width="150" height="688" stretch="1">
-		<frame_base x="0" y="0" width="150" height="688" stretch="1">
+	<stg_category_selector x="416" y="416" width="192" height="160" stretch="1">
+		<frame_base x="0" y="0" width="192" height="160" stretch="1">
 			<texture r="0" g="0" b="0" a="150">ui_icons_PDA_tooltips</texture>
 		</frame_base>
 
-		<cap x="0" y="0" width="150" height="30" stretch="1">
-			<text r="250" g="250" b="250" font="letterica18" align="c" vert_align="c">st_ui_dbg_spawn_type</text>
-		</cap>
-
-		<frame_list x="20" y="30" width="110" height="638" stretch="1">
-			<texture r="150" b="150" g="150">ui_icons_PDA_tooltips</texture>
-		</frame_list>
-		<list x="25" y="40" width="95" height="618" item_height="22" can_select="1">
-			<font font="letterica16" r="210" g="210" b="210"/>
-		</list>
+		<btn_c_all x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_all>
+		<btn_c_ammo x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_ammo>
+		<btn_c_consumables x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_consumables>
+		<btn_c_equipment x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_equipment>
+		<btn_c_tech x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_tech>
+		<btn_c_trophies x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_trophies>
+		<btn_c_misc x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_misc>
+		<btn_c_unknown x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_unknown>
+		<btn_c_weapons x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_weapons>
+		<btn_c_armor x="0" y="0" width="88" height="28">
+			<texture>ui_button_ordinary</texture>
+		</btn_c_armor>
 	</stg_category_selector>
 
 	<stg_storage_inventory x="32" y="32" width="368" height="544" stretch="1">

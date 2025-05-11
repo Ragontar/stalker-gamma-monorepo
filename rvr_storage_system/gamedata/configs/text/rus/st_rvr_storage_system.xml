@@ -89,6 +89,9 @@
 
 
     <!-- Categories -->
+    <string id="st_c_all">
+        <text>Âñå</text>
+    </string>
     <string id="st_c_weapons">
         <text>Îðóæèå</text>
     </string>
