@@ -71,7 +71,7 @@ function GetCfg()
 
         spawner_durability_set_delay_seconds = 0.1,
 
-        lister_item_width = 348, -- should be the same as list_box width
+        lister_item_width = 348, -- should be the same as list_box width (how the fuck it appeared in global cfg???)
         lister_enable_merged_kinds = true,
         lister_enable_kinds_separators = rvr_storage_system_mcm.get_config("experimental_enable_kinds_separators"),
 
@@ -163,6 +163,22 @@ function GetCategories()
     return cats
 end
 
+function GetEnabledCategories()
+    local cats = {}
+
+    for _, cat in pairs(GetCategories()) do
+        if cat.id == "c_armor" and not cfg.storage_enable_armor then
+            printf("skipping c_armor: disabled by cfg")
+        elseif cat.id == "c_weapons" and not cfg.storage_enable_weapon then
+            printf("skipping c_weapons: disabled by cfg")
+        else
+            table.insert(cats, cat)
+        end
+    end
+
+    return cats
+end
+
 categories = nil
 
 -----
@@ -182,6 +198,8 @@ function start(storage)
     end
 
     if (GUI) and (not GUI:IsShown()) and keybind_pass() then
+        GUI:Commons_Init()
+
         if mode == mode_bank then
             -- change_last_mode(1)
             GUI:BankMode_Init(storage)
@@ -231,6 +249,9 @@ end
 function on_option_change()
     cfg = GetCfg()
     categories = GetCategories()
+    if GUI then
+        GUI = UIStorage()
+    end
 end
 
 function on_actor_inventory_update_finished()
@@ -402,6 +423,55 @@ function UIStorage:InitControls()
     self.storage_d_amount_cap     = xml:InitStatic("stg_storage_inventory:cap_amount", self.storage_d)
     self.storage_inv              = xml:InitListBox("stg_storage_inventory:list", self.storage_d_list)
     self:Register(self.storage_inv, "move_storage_item_db_click")
+
+    self:InitControls_CategorySelector(xml)
+end
+
+function UIStorage:InitControls_CategorySelector(xml)
+    -- Category selector
+    self.stg_category_selector_d = xml:InitStatic("stg_category_selector", self)
+    self.stg_category_selector_d_frame = xml:InitFrame("stg_category_selector:frame_base", self.stg_category_selector_d)
+
+    self.cats_btn = {}
+    local btn_width = 88
+    local btn_height = 26
+    local btn_margin = 5
+    local x_offset = btn_margin
+    local y_offset = btn_margin
+
+    self.cats_btn["c_all"] = xml:Init3tButton("stg_category_selector:btn_c_all",
+        self.stg_category_selector_d_frame)
+
+    self.cats_btn["c_all"]:SetWndSize(vector2():set(btn_width, btn_height))
+    self.cats_btn["c_all"]:SetWndPos(vector2():set(x_offset, y_offset))
+    self.cats_btn["c_all"]:TextControl():SetTextST("1. " .. game.translate_string("st_c_all"))
+    self:Register(self.cats_btn["c_all"], "cats_btn_c_all")
+    self:AddCallback("cats_btn_c_all", ui_events.BUTTON_CLICKED, self.OnFilterCategory, self)
+
+    local enabled_cats = GetEnabledCategories()
+    for i, cat in ipairs(enabled_cats) do
+        x_offset = btn_margin + (btn_margin + btn_width) * (i % 2)
+        if i % 2 == 0 then
+            y_offset = y_offset + (btn_margin + btn_height)
+        end
+
+        printf("setting button for %s: x=%s y=%s", cat.id, x_offset, y_offset)
+
+        self.cats_btn[cat.id] = xml:Init3tButton("stg_category_selector:btn_" .. cat.id,
+            self.stg_category_selector_d_frame)
+        self.cats_btn[cat.id]:SetWndSize(vector2():set(btn_width, btn_height))
+        self.cats_btn[cat.id]:SetWndPos(vector2():set(x_offset, y_offset))
+        self.cats_btn[cat.id]:TextControl():SetTextST(tostring(i + 1) .. ". " .. game.translate_string(cat.display_name))
+        self.cats_btn[cat.id].category = cat
+
+        self:Register(self.cats_btn[cat.id], "cats_btn_" .. cat.id)
+
+        local cats_btn_on_click = function()
+            return self:OnFilterCategory(self.cats_btn[cat.id].category)
+        end
+
+        self:AddCallback("cats_btn_" .. cat.id, ui_events.BUTTON_CLICKED, cats_btn_on_click)
+    end
 end
 
 function UIStorage:InitCallBacks()
@@ -413,6 +483,10 @@ function UIStorage:InitCallBacks()
     -- self:AddCallback("check_inv", ui_events.BUTTON_CLICKED, self.OnButton_Inv, self)
     -- self:AddCallback("check_point", ui_events.BUTTON_CLICKED, self.OnButton_Point, self)
     -- self:AddCallback("list", ui_events.WINDOW_LBUTTON_DB_CLICK, self.OnStartAnim, self)
+end
+
+function UIStorage:Commons_Init()
+    self.selected_cat = nil
 end
 
 -- Test bank mode
@@ -465,7 +539,7 @@ function UIStorage:Reset(force)
 
     self.next_reset_time = time_global() + cfg.ui_storage_min_reset_period_ms
 
-    self:LogTr("Reset call")
+    -- self:LogTr("Reset call")
 
     local actor_inv_pos = self.actor_inv:GetCurrentScrollPos()
     local storage_inv_pos = self.storage_inv:GetCurrentScrollPos()
@@ -490,7 +564,14 @@ function UIStorage:Refresh()
 end
 
 function UIStorage:RenderStorageInv()
-    local lister = Lister():FromStorage(self.storage)
+    local opts = {}
+
+    if self.selected_cat then
+        printf("RenderStorageInv: selected_cat defined")
+        opts.only_categories = { self.selected_cat }
+    end
+
+    local lister = Lister():FromStorage(self.storage, opts)
     if not lister then
         self:LogTr("nil lister")
 
@@ -504,8 +585,14 @@ end
 
 function UIStorage:RenderActorInv()
     local inv = GetInventoryListEntries(db.actor)
+    local opts = {}
 
-    local lister = Lister():FromNPCInv(inv)
+    if self.selected_cat then
+        printf("RenderActorInv: selected_cat defined")
+        opts.only_categories = { self.selected_cat }
+    end
+
+    local lister = Lister():FromNPCInv(inv, opts)
     if not lister then
         self:LogTr("nil lister")
 
@@ -588,6 +675,19 @@ function UIStorage:OnKeyboard(dik, keyboard_action)
 
         return
     end
+end
+
+function UIStorage:OnFilterCategory(cat)
+    printf("OnFilterCategory call")
+    if not cat or cat.id == "c_all" then
+        printf("OnFilterCategory display all")
+        self.selected_cat = nil
+    else
+        printf("OnFilterCategory cat=%s", cat.id)
+        self.selected_cat = cat
+    end
+
+    self:Reset(true)
 end
 
 function UIStorage:OnStorageItemList()
@@ -739,9 +839,13 @@ function Lister:__finalize()
 
 end
 
-function Lister:FromNPCInv(inv)
+function Lister:FromNPCInv(inv, opts)
     if not inv then
         return nil
+    end
+
+    if opts then
+        self.only_categories = opts.only_categories
     end
 
     for sec, by_sec in pairs(inv) do
@@ -761,9 +865,13 @@ function Lister:FromNPCInv(inv)
     return self
 end
 
-function Lister:FromStorage(storage)
+function Lister:FromStorage(storage, opts)
     if not storage or not storage.GetContent then
         return nil
+    end
+
+    if opts then
+        self.only_categories = opts.only_categories
     end
 
     for sec, by_durability in pairs(storage:GetContent()) do
@@ -798,7 +906,8 @@ function Lister:HasDurability(section)
 
     local kind = SYS_GetParam(0, section, "kind") or "unknown"
     local cats = GetCategoriesByKind()
-    local opts = cats[kind].opts or {}
+    local cat = cats[kind] or {}
+    local opts = cat.opts or {}
 
     if opts.hide_durability then
         has_cond = opts.hide_durability_exceptions[kind] or false
@@ -831,6 +940,12 @@ function Lister:Sort(elements, opts)
             goto continue
         end
 
+        if not self:IsCategoryDisplayed(cat) then
+            printf("Lister: category filtered out: %s", cat.id)
+
+            goto continue
+        end
+
         local bk = by_cat_kind[cat]
         if bk then
             -- add category separator
@@ -856,6 +971,27 @@ function Lister:Sort(elements, opts)
     end
 
     return result
+end
+
+function Lister:IsCategoryDisplayed(cat)
+    if not cat then return false end
+
+    return self:GetAllowedCategoriesIDIndex()[cat.id] ~= nil
+end
+
+function Lister:GetAllowedCategoriesIDIndex()
+    local index = {}
+    if self.only_categories and type(self.only_categories) == "table" then
+        for _, allowed_cat in pairs(self.only_categories) do
+            index[allowed_cat.id] = allowed_cat
+        end
+    else
+        for _, allowed_cat in pairs(GetCategories()) do
+            index[allowed_cat.id] = allowed_cat
+        end
+    end
+
+    return index
 end
 
 -- todo maybe "meta" sorting will be required in future

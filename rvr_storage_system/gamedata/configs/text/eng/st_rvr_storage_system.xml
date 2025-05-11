@@ -89,6 +89,9 @@
 
 
     <!-- Categories -->
+    <string id="st_c_all">
+        <text>All</text>
+    </string>
     <string id="st_c_weapons">
         <text>Weapons</text>
     </string>
