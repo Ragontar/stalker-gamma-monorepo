@@ -36,6 +36,24 @@
 		</btn_c_armor>
 	</stg_category_selector>
 
+	<!-- !example
+	<input_name x="120" y="60" width="314" height="40">
+		<text x="5" font="medium" vert_align="c" align="l"/>
+		<texture>ui_inGame2_edit_box_2</texture>
+	</input_name>
+	-->
+
+	<stg_searchbox x="416" y="364" width="192" height="40" stretch="1">
+		<frame_base x="0" y="0" width="192" height="40" stretch="1">
+			<texture r="0" g="0" b="0" a="150">ui_icons_PDA_tooltips</texture>
+		</frame_base>
+
+		<input_searchbox x="5" y="5" width="182" height="30">
+			<text x="5" font="medium" vert_align="c" align="l"/>
+			<texture>ui_inGame2_edit_box_2</texture>
+		</input_searchbox>
+	</stg_searchbox>
+
 	<stg_storage_inventory x="32" y="32" width="368" height="544" stretch="1">
 		<frame_base x="0" y="0" width="368" height="544" stretch="1">
 			<texture r="0" g="0" b="0" a="150">ui_icons_PDA_tooltips</texture>
