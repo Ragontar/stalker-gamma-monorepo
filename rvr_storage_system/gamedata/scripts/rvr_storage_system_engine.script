@@ -14,7 +14,7 @@ function on_game_start()
     RegisterScriptCallback("on_actor_inventory_update_finished", on_actor_inventory_update_finished)
     RegisterScriptCallback("on_storage_inventory_update_finished", on_storage_inventory_update_finished)
     RegisterScriptCallback("rvr_storage_actor_on_stash_create", rvr_storage_actor_on_stash_create)
-    RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
+    -- RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
     RegisterScriptCallback("on_option_change", on_option_change)
     RegisterScriptCallback("on_localization_change", on_localization_change)
 end
@@ -238,6 +238,7 @@ function on_storage_inventory_update_finished(storage)
     if GUI and GUI:IsShown() then
         GUI:Reset()
     end
+
 end
 
 -- Function called when a key is pressed
@@ -246,6 +247,13 @@ function on_key_press(dik)
         if cfg.dev_debug_mode then
             start(ActiveStorages["test_bank"])
         end
+    end
+
+    local bind = dik_to_bind(dik)
+    if bind == key_bindings.kUSE then
+       --todo
+
+        return
     end
 end
 
@@ -1292,6 +1300,11 @@ function AddKindToHideDurabilityExceptions(cats, kind)
     if not kind then
         return
     end
+    if not categories then
+        printf("GetCategoriesOrder: categories is nil!")
+
+        return {}
+    end
 
     for _, cat in pairs(cats) do
         for _, k in pairs(cat.kinds) do
@@ -1347,23 +1360,30 @@ function physic_object_on_use_callback(obj, who)
     log("used adv stash: " .. who:id())
     log("adv stash id: " .. obj:id())
 
-    CreateTimeEvent("UIStorage", "close_inventory_ui", 0, function()
-        ui_inventory.hide_inventory()
-        ui_inventory.GUI = ui_inventory.UIInventory() -- because it's a fucking magic
-
-        if zzz_rax_sortingplus_mcm then               -- SortingPlus compatibility
-            zzz_rax_sortingplus_mcm.actor_on_first_update()
-        end
-
-        start(stg)
-
-        return true
-    end)
+    start(stg)
 end
 
 -----
 --- Interceptors and monkey patches
 -----
+
+local uinv_orig_start = ui_inventory.start
+ui_inventory.start = function(mode, obj)
+    printf("monkey patching ui_inventory.start")
+
+    local stg
+    if obj then
+        stg = ActiveStorages[obj:id()]
+    end
+
+    if not stg then
+        return uinv_orig_start(mode, obj)
+    end
+
+    log("adv stash id: " .. obj:id())
+
+    start(stg)
+end
 
 item_backpack_orig_func_stash = item_backpack.func_stash
 item_backpack.func_stash = function(obj)
