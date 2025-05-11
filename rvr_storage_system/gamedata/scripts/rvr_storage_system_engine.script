@@ -432,6 +432,21 @@ function UIStorage:InitControls()
 
     self:InitControls_CategorySelector(xml)
     self:InitControls_Searchbox(xml)
+    self:InitControls_Footer(xml)
+end
+
+function UIStorage:InitControls_Footer(xml)
+    self.stg_footer_d       = xml:InitStatic("stg_footer", self)
+    self.stg_footer_d_frame = xml:InitFrame("stg_footer:frame_base", self.stg_footer_d)
+    self.stg_footer_cap   = xml:InitTextWnd("stg_footer:cap", self.stg_footer_d_frame)
+    self.stg_footer_hints   = xml:InitTextWnd("stg_footer:hints", self.stg_footer_d_frame)
+
+    -- self.stg_footer_hints:SetText("rvr_ss_storage_footer_hints")
+    self.stg_footer_hints:Show(true)
+
+    -- self.footer             = xml:InitEditBox("stg_footer:input_footer", self.stg_footer_d_frame)
+    -- self:Register(self.searchbox, "input_searchbox")
+    -- self:AddCallback("input_searchbox", ui_events.EDIT_TEXT_COMMIT, self.OnNameSearchboxCommit, self)
 end
 
 function UIStorage:InitControls_Searchbox(xml)
@@ -439,7 +454,6 @@ function UIStorage:InitControls_Searchbox(xml)
     self.stg_searchbox_d_frame = xml:InitFrame("stg_searchbox:frame_base", self.stg_searchbox_d)
     self.searchbox             = xml:InitEditBox("stg_searchbox:input_searchbox", self.stg_searchbox_d_frame)
     self:Register(self.searchbox, "input_searchbox")
-    -- self.searchbox:CaptureFocus(true)
     self:AddCallback("input_searchbox", ui_events.EDIT_TEXT_COMMIT, self.OnNameSearchboxCommit, self)
 end
 
