@@ -128,6 +128,20 @@
         <text>Do you want to create an advanced stash? If no, a default stash will be created.</text>
     </string>
 
+    <string id="rvr_ss_storage_footer_cap">
+        <text>Hints and controls</text>
+    </string>
+    <string id="rvr_ss_storage_footer_hints">
+        <text>\n
+        * [SHIFT+dLMB], [CTRL+dLMB] and [CTRL+SHIFT+dLMB], where dLMB means double LMB click, are used to take/put more items. Check MCM for multipliers settings.\n
+        * [SHIFT+F] sets focus on the search textbox.\n
+        * [CTRL+SHIFT+F] sets focus on the search textbox and removes it's content.\n
+        * [Enter] or unfocus search textbox to filter all items, with a respect to the selected category.\n
+        * [ALT+dLMB] marks item as favorite. Repeat to remove marking. [UNIMPLEMENTED]\n
+        * [SHIFT+ALT+dLMB] marks item as a trash. Repeat to remove marking. [UNIMPLEMENTED]\n
+        </text>
+    </string>
+
     <!-- <string id="st_c_consumables">
         <text>-</text>
     </string>

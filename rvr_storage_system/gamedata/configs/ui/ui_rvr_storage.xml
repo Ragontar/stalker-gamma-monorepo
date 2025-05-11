@@ -36,13 +36,6 @@
 		</btn_c_armor>
 	</stg_category_selector>
 
-	<!-- !example
-	<input_name x="120" y="60" width="314" height="40">
-		<text x="5" font="medium" vert_align="c" align="l"/>
-		<texture>ui_inGame2_edit_box_2</texture>
-	</input_name>
-	-->
-
 	<stg_searchbox x="416" y="364" width="192" height="40" stretch="1">
 		<frame_base x="0" y="0" width="192" height="40" stretch="1">
 			<texture r="0" g="0" b="0" a="150">ui_icons_PDA_tooltips</texture>
@@ -100,4 +93,26 @@
 			<font font="letterica16" r="250" g="250" b="150"/>
 		</list>
 	</stg_actor_inventory>
+
+	<stg_footer x="32" y="592" width="960" height="144" stretch="1">
+		<frame_base x="0" y="0" width="960" height="144" stretch="1">
+			<texture r="0" g="0" b="0" a="150">ui_icons_PDA_tooltips</texture>
+		</frame_base>
+		<cap x="20" y="0" width="400" height="30" stretch="1">
+			<text r="150" g="250" b="250" font="letterica18" align="c" vert_align="c">rvr_ss_storage_footer_cap</text>
+		</cap>
+		<hints x="20" y="40" width="400" height="94" stretch="1">
+			<text complex_mode="1" r="250" g="250" b="250" align="l" vert_align="c" font="letterica16">rvr_ss_storage_footer_hints</text>
+		</hints>
+
+<!--
+		<cap x="20" y="0" width="330" height="50" stretch="1">
+			<text r="250" g="250" b="250" font="letterica18" align="c" vert_align="c">st_ui_dbg_item_compare</text>
+		</cap>
+		<icon_1 x="20" y="50" width="165" height="150" stretch="1"/>
+		<icon_2 x="185" y="50" width="165" height="150" stretch="1"/>
+		<name_1 x="20" y="205" width="165" height="50" stretch="1">
+			<text complex_mode="1" r="150" g="250" b="250" align="c" vert_align="c" font="letterica16"/>
+		</name_1> -->
+	</stg_footer>
 </w>
