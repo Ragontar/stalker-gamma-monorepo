@@ -41,12 +41,19 @@ mode_mats_container = "mats_container"
 mode_global_storage = "global_storage"
 -- possible variants: artifacts, w/a parts (has durability, seems bad)
 
+mark_favorite = 1
+mark_favorite_prefix = "[F] "
+
+mark_trash = 2
+mark_trash_prefix = "[T] "
+
 RVRData = nil
 GUI = nil
 ActiveStorages = nil
+Marks = {}
 
 is_shift_pressed = false
-is_ctrl_pressed = false
+is_control_pressed = false
 is_alt_pressed = false
 
 SpawnerEventSource = "rvr_spawner_event_source"
@@ -234,6 +241,7 @@ function init()
     end
     InitDefaultStorages()
     InitActiveStorages()
+    InitMarks()
 end
 
 function on_localization_change()
@@ -286,6 +294,9 @@ function on_key_press(dik)
     if dik == DIK_keys.DIK_LCONTROL then
         is_control_pressed = true
     end
+    if dik == DIK_keys.DIK_LMENU then
+        is_alt_pressed = true
+    end
 
     local bind = dik_to_bind(dik)
     if bind == key_bindings.kINVENTORY then
@@ -303,6 +314,9 @@ function on_key_release(dik)
     end
     if dik == DIK_keys.DIK_LCONTROL then
         is_control_pressed = false
+    end
+    if dik == DIK_keys.DIK_LMENU then
+        is_alt_pressed = false
     end
 end
 
@@ -332,30 +346,36 @@ function ItemListElement:__init(section, width, name, durability, amount, opts)
     super(section, width)
 
     self.inactive        = opts.inactive or false
+    self.opts            = opts
 
     self.name            = name
     self.section         = section
     self.durability      = ConvertPercentStrToNum(durability)
     self.durability_text = durability
     self.amount          = amount
+    self.width           = width
 
-    self.name_f          = self:GetTextItem()
-    self.name_f:SetWndRect(Frect():set(0, 0, width, 22))
-    self.name_f:SetWndSize(vector2():set(width - 120, 22))
-    self.name_f:SetText(name)
+    self:Reset()
+end
 
-    if not opts.hide_durability then
-        self.durability_f = self:AddTextField(durability, 1)
+function ItemListElement:Reset()
+    self.name_f = self:GetTextItem()
+    self.name_f:SetWndRect(Frect():set(0, 0, self.width, 22))
+    self.name_f:SetWndSize(vector2():set(self.width - 120, 22))
+    self.name_f:SetText(self.name)
+
+    if not self.opts.hide_durability then
+        self.durability_f = self:AddTextField(self.durability_text, 1)
         self.durability_f:SetWndRect(Frect():set(0, 0, 50, 22))
-        self.durability_f:SetWndPos(vector2():set(width - 100, 0))
-        self.durability_f:SetText(durability)
+        self.durability_f:SetWndPos(vector2():set(self.width - 100, 0))
+        self.durability_f:SetText(self.durability_text)
     end
 
-    if not opts.hide_amount then
-        self.amount_f = self:AddTextField(amount, 2)
+    if not self.opts.hide_amount then
+        self.amount_f = self:AddTextField(self.amount, 2)
         self.amount_f:SetWndRect(Frect():set(0, 0, 50, 22))
-        self.amount_f:SetWndPos(vector2():set(width - 50, 0))
-        self.amount_f:SetText(amount)
+        self.amount_f:SetWndPos(vector2():set(self.width - 50, 0))
+        self.amount_f:SetText(self.amount)
     end
 end
 
@@ -438,7 +458,7 @@ end
 function UIStorage:InitControls_Footer(xml)
     self.stg_footer_d       = xml:InitStatic("stg_footer", self)
     self.stg_footer_d_frame = xml:InitFrame("stg_footer:frame_base", self.stg_footer_d)
-    self.stg_footer_cap   = xml:InitTextWnd("stg_footer:cap", self.stg_footer_d_frame)
+    self.stg_footer_cap     = xml:InitTextWnd("stg_footer:cap", self.stg_footer_d_frame)
     self.stg_footer_hints   = xml:InitTextWnd("stg_footer:hints", self.stg_footer_d_frame)
 
     -- self.stg_footer_hints:SetText("rvr_ss_storage_footer_hints")
@@ -765,12 +785,22 @@ function UIStorage:OnStorageItemList()
         return
     end
 
-    local amount = math.min(CalculatePutOrGetAmount(pick.section, pick.amount) * self.multiplier, pick.amount)
+    if is_alt_pressed then
+        if is_shift_pressed then
+            self:CycleTrash(pick.section)
+        else
+            self:CycleFavorites(pick.section)
+        end
+    else
+        local amount = math.min(CalculatePutOrGetAmount(pick.section, pick.amount) * self.multiplier, pick.amount)
 
-    self.storage:Get(pick.section, pick.durability_text, amount)
-    printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
+        self.storage:Get(pick.section, pick.durability_text, amount)
+        printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
 
-    SpawnItem(db.actor, pick.section, amount, pick.durability)
+        SpawnItem(db.actor, pick.section, amount, pick.durability)
+    end
+
+
 
     self:Reset()
 end
@@ -783,12 +813,41 @@ function UIStorage:OnActorItemList()
         return
     end
 
-    local amount = CalculatePutOrGetAmount(pick.section, pick.amount) * self.multiplier
-    local absent_amount = RemoveItems(db.actor, pick.section, amount, pick.durability)
-    self.storage:Put(pick.section, pick.durability_text, amount - absent_amount)
-    printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount .. "absent_amount= " .. absent_amount)
+    if is_alt_pressed then
+        if is_shift_pressed then
+            self:CycleTrash(pick.section)
+        else
+            self:CycleFavorites(pick.section)
+        end
+    else
+        local amount = CalculatePutOrGetAmount(pick.section, pick.amount) * self.multiplier
+        local absent_amount = RemoveItems(db.actor, pick.section, amount, pick.durability)
+        self.storage:Put(pick.section, pick.durability_text, amount - absent_amount)
+        printf("put " ..
+            pick.section .. " " .. pick.durability .. "amount= " .. amount .. "absent_amount= " .. absent_amount)
+    end
 
     self:Reset()
+end
+
+function UIStorage:CycleFavorites(section)
+    printf("CycleFavorites call on %s", section)
+
+    if Marks[section] == mark_favorite then
+        Marks[section] = nil
+    else
+        Marks[section] = mark_favorite
+    end
+end
+
+function UIStorage:CycleTrash(section)
+    printf("CycleTrash call on %s", section)
+
+    if Marks[section] == mark_trash then
+        Marks[section] = nil
+    else
+        Marks[section] = mark_trash
+    end
 end
 
 function UIStorage:Log(msg, ...)
@@ -1039,7 +1098,7 @@ function Lister:Sort(elements, opts)
                             goto skip_element
                         end
 
-                        table.insert(result, el)
+                        table.insert(result, self:GetMarkedName(el))
                         ::skip_element::
                     end
                 end
@@ -1071,6 +1130,27 @@ function Lister:GetAllowedCategoriesIDIndex()
     end
 
     return index
+end
+
+function Lister:GetMarkedName(el)
+    local prefix = ""
+
+    if Marks[el.section] == mark_favorite then
+        prefix = mark_favorite_prefix
+    end
+    if Marks[el.section] == mark_trash then
+        prefix = mark_trash_prefix
+    end
+
+    if el.name then
+        el.name = prefix .. el.name
+    else
+        printf("received nil name for section=%s!", el.section)
+    end
+
+    el:Reset()
+
+    return el
 end
 
 -- todo maybe "meta" sorting will be required in future
@@ -1357,6 +1437,10 @@ function InitActiveStorages()
         printf("initialized ActiveStorage id=" ..
             tostring(storage.id) .. " val=" .. tostring(ActiveStorages[storage.id]:GetContent()))
     end
+end
+
+function InitMarks()
+    Marks = RVRData.Marks or {}
 end
 
 function CalculatePutOrGetAmount(section, pickAmount)
