@@ -142,6 +142,19 @@
         </text>
     </string>
 
+    <string id="rvr_ss_storage_footer_depositall_btn">
+        <text>Deposit All</text>
+    </string>
+    <string id="rvr_ss_storage_footer_keep_favorite">
+        <text>Keep favorite items</text>
+    </string>
+    <string id="rvr_ss_storage_footer_keep_regular">
+        <text>Keep regular items</text>
+    </string>
+    <string id="rvr_ss_storage_footer_keep_trash">
+        <text>Keep trash items</text>
+    </string>
+
     <!-- <string id="st_c_consumables">
         <text>-</text>
     </string>

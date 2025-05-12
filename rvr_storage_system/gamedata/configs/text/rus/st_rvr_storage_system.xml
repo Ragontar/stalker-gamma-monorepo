@@ -141,4 +141,8 @@
         * [SHIFT+ALT+dLMB] ïîìå÷àåò ýëåìåíò êàê ìóñîð. Ïîâòîðèòå, ÷òîáû ñíÿòü ïîìåòêó. [ÍÅ ÐÅÀËÈÇÎÂÀÍÎ]\n
         </text>
     </string>
+
+    <string id="rvr_ss_storage_footer_depositall_btn">
+        <text>Ñëîæèòü âñå</text>
+    </string>
 </string_table>

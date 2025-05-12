@@ -463,12 +463,30 @@ function UIStorage:InitControls_Footer(xml)
     self.stg_footer_cap     = xml:InitTextWnd("stg_footer:cap", self.stg_footer_d_frame)
     self.stg_footer_hints   = xml:InitTextWnd("stg_footer:hints", self.stg_footer_d_frame)
 
-    -- self.stg_footer_hints:SetText("rvr_ss_storage_footer_hints")
     self.stg_footer_hints:Show(true)
 
-    -- self.footer             = xml:InitEditBox("stg_footer:input_footer", self.stg_footer_d_frame)
-    -- self:Register(self.searchbox, "input_searchbox")
-    -- self:AddCallback("input_searchbox", ui_events.EDIT_TEXT_COMMIT, self.OnNameSearchboxCommit, self)
+    self.stg_footer_depositall_d = xml:InitStatic("stg_footer:depositall_frame", self.stg_footer_d_frame)
+    self.depositall_btn = xml:Init3tButton("stg_footer:depositall_frame:depositall_btn", self.stg_footer_depositall_d)
+    self:Register(self.depositall_btn, "depositall_btn")
+    self:AddCallback("depositall_btn", ui_events.BUTTON_CLICKED, self.DepositAll, self)
+
+    self.keep_favorite_cap = xml:InitStatic("stg_footer:depositall_frame:cap_check_keep_favorite",
+    self.stg_footer_depositall_d)
+    self.keep_favorite = xml:InitCheck("stg_footer:depositall_frame:check_keep_favorite",
+    self.stg_footer_depositall_d)
+    self:Register(self.keep_favorite, "keep_favorite")
+
+    self.keep_regular_cap = xml:InitStatic("stg_footer:depositall_frame:cap_check_keep_regular",
+    self.stg_footer_depositall_d)
+    self.keep_regular = xml:InitCheck("stg_footer:depositall_frame:check_keep_regular",
+        self.stg_footer_depositall_d)
+    self:Register(self.keep_regular, "keep_regular")
+
+    self.keep_trash_cap = xml:InitStatic("stg_footer:depositall_frame:cap_check_keep_trash",
+        self.stg_footer_depositall_d)
+    self.keep_trash = xml:InitCheck("stg_footer:depositall_frame:check_keep_trash",
+    self.stg_footer_depositall_d)
+    self:Register(self.keep_trash, "keep_trash")
 end
 
 function UIStorage:InitControls_Searchbox(xml)
@@ -695,6 +713,10 @@ end
 
 function UIStorage:DepositAll()
     for _, el in pairs(self.actor_inv_elements) do
+        if el.inactive then -- separators and other stuff
+            goto continue
+        end
+
         local mark = Marks[el.section] or mark_regular
 
         if self.keep_favorite and mark == mark_favorite then
@@ -1576,7 +1598,7 @@ end
 -- RemoveItems returns {section, remaining, durability}
 function RemoveItems(npc, section, amount, durability)
     local kind = SYS_GetParam(0, section, "kind") or "na"
-    local cnt = amount
+    local cnt = amount or 0
     local max_uses = IsItem("multiuse", section)
     local keep_itr = true
 
