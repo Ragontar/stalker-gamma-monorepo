@@ -44,6 +44,8 @@ mode_global_storage = "global_storage"
 mark_favorite = 1
 mark_favorite_prefix = "[F] "
 
+mark_regular = 0
+
 mark_trash = -1
 mark_trash_prefix = "[T] "
 
@@ -538,6 +540,10 @@ end
 function UIStorage:Commons_Init()
     self.selected_cat = nil
     self.name_filter_str = nil
+
+    self.keep_favorite = false
+    self.keep_regular = false
+    self.keep_trash = false
 end
 
 -- Test bank mode
@@ -637,6 +643,8 @@ function UIStorage:RenderStorageInv()
 
     local elements = lister:GetListElements()
 
+    self.storage_inv_elements = elements or {}
+
     self:Render(self.storage_inv, elements)
 end
 
@@ -663,6 +671,8 @@ function UIStorage:RenderActorInv()
 
     local elements = lister:GetListElements()
 
+    self.actor_inv_elements = elements or {}
+
     self:Render(self.actor_inv, elements)
 end
 
@@ -680,6 +690,26 @@ function UIStorage:Render(list_box, elements)
 
     for _, el in pairs(elements) do
         list_box:AddExistingItem(el)
+    end
+end
+
+function UIStorage:DepositAll()
+    for _, el in pairs(self.actor_inv_elements) do
+        local mark = Marks[el.section] or mark_regular
+
+        if self.keep_favorite and mark == mark_favorite then
+            goto continue
+        end
+        if self.keep_trash and mark == mark_trash then
+            goto continue
+        end
+        if self.keep_regular and mark == mark_regular then
+            goto continue
+        end
+
+        self:Deposit(el, el.amount)
+
+        ::continue::
     end
 end
 
@@ -793,14 +823,8 @@ function UIStorage:OnStorageItemList()
         end
     else
         local amount = math.min(CalculatePutOrGetAmount(pick.section, pick.amount) * self.multiplier, pick.amount)
-
-        self.storage:Get(pick.section, pick.durability_text, amount)
-        printf("put " .. pick.section .. " " .. pick.durability .. "amount= " .. amount)
-
-        SpawnItem(db.actor, pick.section, amount, pick.durability)
+        self:Withdraw(pick, amount)
     end
-
-
 
     self:Reset()
 end
@@ -821,13 +845,30 @@ function UIStorage:OnActorItemList()
         end
     else
         local amount = CalculatePutOrGetAmount(pick.section, pick.amount) * self.multiplier
-        local absent_amount = RemoveItems(db.actor, pick.section, amount, pick.durability)
-        self.storage:Put(pick.section, pick.durability_text, amount - absent_amount)
-        printf("put " ..
-            pick.section .. " " .. pick.durability .. "amount= " .. amount .. "absent_amount= " .. absent_amount)
+        self:Deposit(pick, amount)
     end
 
     self:Reset()
+end
+
+function UIStorage:Withdraw(pick, amount)
+    printf("withdraw request = {%s, %s, %s}", pick.section, amount, pick.durability_text)
+
+    local resp = self.storage:Get(pick.section, pick.durability_text, amount)
+
+    printf("withdraw response = {%s, %s, %s}", resp.section, resp.amount, resp.durability_text)
+
+    SpawnItem(db.actor, resp.section, resp.amount, resp.durability_text)
+end
+
+function UIStorage:Deposit(pick, amount)
+    printf("deposit request = {%s, %s, %s}", pick.section, amount, pick.durability)
+
+    local resp = RemoveItems(db.actor, pick.section, amount, pick.durability)
+
+    printf("deposit response = {%s, %s, %s}", resp.section, resp.remaining, resp.durability)
+
+    self.storage:Put(resp.section, pick.durability_text, amount - resp.remaining)
 end
 
 function UIStorage:CycleFavorites(section)
@@ -902,21 +943,21 @@ function Storage:__finalize()
 end
 
 -- Get returns {section, durability, amount} on success or nil
-function Storage:Get(section, durability, amount)
+function Storage:Get(section, durability_text, amount)
     if self.Content[section] == nil then
         return
     end
-    if self.Content[section][durability] == nil then
+    if self.Content[section][durability_text] == nil then
         return
     end
 
-    amount = math.min(amount, self.Content[section][durability].amount)
+    amount = math.min(amount, self.Content[section][durability_text].amount)
 
-    self.Content[section][durability].amount = self.Content[section][durability].amount - amount
+    self.Content[section][durability_text].amount = self.Content[section][durability_text].amount - amount
 
     return {
         section = section,
-        durability = durability,
+        durability_text = durability_text,
         amount = amount
     }
 end
@@ -1466,7 +1507,12 @@ function CalculatePutOrGetAmount(section, pickAmount)
     return math.min(max_uses, pickAmount)
 end
 
+-- SpawnItem expects numeric durability or string val in format xx%
 function SpawnItem(npc, section, amount, durability)
+    if type(durability) == "string" then
+        durability = ConvertPercentStrToNum(durability)
+    end
+
     amount = amount or 1
     local remaining = 0
     local iterations = amount
@@ -1527,7 +1573,7 @@ function SpawnItem(npc, section, amount, durability)
     end
 end
 
--- RemoveItems returns remaining amount, that cannot be removed
+-- RemoveItems returns {section, remaining, durability}
 function RemoveItems(npc, section, amount, durability)
     local kind = SYS_GetParam(0, section, "kind") or "na"
     local cnt = amount
@@ -1583,7 +1629,11 @@ function RemoveItems(npc, section, amount, durability)
 
     SendScriptCallback("on_actor_inventory_update_finished")
 
-    return math.max(cnt, 0)
+    return {
+        section = section,
+        remaining = math.max(cnt, 0),
+        durability = durability,
+    }
 end
 
 -- ConvertPercentStrToNum converts "78%" to 0.78
@@ -1684,8 +1734,8 @@ function keybind_pass()
     return false
 end
 
-function string.starts(String,Start)
-   return string.sub(String,1,string.len(Start))==Start
+function string.starts(String, Start)
+    return string.sub(String, 1, string.len(Start)) == Start
 end
 
 -----
