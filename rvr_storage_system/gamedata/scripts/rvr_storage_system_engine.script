@@ -44,7 +44,7 @@ mode_global_storage = "global_storage"
 mark_favorite = 1
 mark_favorite_prefix = "[F] "
 
-mark_trash = 2
+mark_trash = -1
 mark_trash_prefix = "[T] "
 
 RVRData = nil
@@ -1029,7 +1029,7 @@ function Lister:MakeListElement(section, width, name, durability, amount, opts)
     local _E = ItemListElement(section, width, name, durability, amount, opts)
     _E:SetTextColor(GetARGB(255, 150, 150, 250))
 
-    return _E
+    return self:GetMarkedName(_E)
 end
 
 function Lister:HasDurability(section)
@@ -1098,7 +1098,7 @@ function Lister:Sort(elements, opts)
                             goto skip_element
                         end
 
-                        table.insert(result, self:GetMarkedName(el))
+                        table.insert(result, el)
                         ::skip_element::
                     end
                 end
@@ -1175,11 +1175,20 @@ function Lister:GroupByKind(elements, opts)
 
     for kind, els in pairs(result) do
         table.sort(result[kind], function(e1, e2)
-            if (GetObjectName(e1.section) == GetObjectName(e2.section)) then
+            local e1_name = e1.name
+            local e2_name = e2.name
+            local m1 = Marks[e1.section] or 0
+            local m2 = Marks[e2.section] or 0
+
+            if (e2_name == e1_name) then
                 return (e1.durability_text > e2.durability_text)
             end
 
-            return (GetObjectName(e1.section) < GetObjectName(e2.section))
+            if m1 == m2 then
+                return e1_name < e2_name
+            end
+
+            return m1 > m2
         end)
     end
 
@@ -1673,6 +1682,10 @@ function keybind_pass()
         return true
     end
     return false
+end
+
+function string.starts(String,Start)
+   return string.sub(String,1,string.len(Start))==Start
 end
 
 -----
