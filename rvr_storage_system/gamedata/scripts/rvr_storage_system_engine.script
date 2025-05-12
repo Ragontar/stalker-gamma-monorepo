@@ -49,6 +49,10 @@ mark_regular = 0
 mark_trash = -1
 mark_trash_prefix = "[T] "
 
+keep_favorite = false
+keep_regular = false
+keep_trash = false
+
 RVRData = nil
 GUI = nil
 ActiveStorages = nil
@@ -324,7 +328,10 @@ end
 
 function save_state(m_data)
     local rvr_storage_system_data = {
-        RVRData = RVRData
+        RVRData = RVRData,
+        keep_favorite = keep_favorite,
+        keep_regular = keep_regular,
+        keep_trash = keep_trash,
     }
 
     m_data.rvr_storage_system_data = rvr_storage_system_data
@@ -336,6 +343,9 @@ function load_state(m_data)
     end
 
     RVRData = m_data.rvr_storage_system_data.RVRData
+    keep_favorite = m_data.rvr_storage_system_data.keep_favorite or false
+    keep_regular = m_data.rvr_storage_system_data.keep_regular or false
+    keep_trash = m_data.rvr_storage_system_data.keep_trash or false
 end
 
 -----------------------------------------------------------------
@@ -471,22 +481,28 @@ function UIStorage:InitControls_Footer(xml)
     self:AddCallback("depositall_btn", ui_events.BUTTON_CLICKED, self.DepositAll, self)
 
     self.keep_favorite_cap = xml:InitStatic("stg_footer:depositall_frame:cap_check_keep_favorite",
-    self.stg_footer_depositall_d)
+        self.stg_footer_depositall_d)
     self.keep_favorite = xml:InitCheck("stg_footer:depositall_frame:check_keep_favorite",
-    self.stg_footer_depositall_d)
+        self.stg_footer_depositall_d)
     self:Register(self.keep_favorite, "keep_favorite")
+    self:AddCallback("keep_favorite", ui_events.BUTTON_CLICKED, self.KeepFilter, self, "keep_favorite")
+    -- self:AddCallback("keep_favorite", ui_events.CHECK_BUTTON_RESET, self.KeepFilter, self, "keep_favorite", false)
 
     self.keep_regular_cap = xml:InitStatic("stg_footer:depositall_frame:cap_check_keep_regular",
-    self.stg_footer_depositall_d)
+        self.stg_footer_depositall_d)
     self.keep_regular = xml:InitCheck("stg_footer:depositall_frame:check_keep_regular",
         self.stg_footer_depositall_d)
     self:Register(self.keep_regular, "keep_regular")
+    self:AddCallback("keep_regular", ui_events.BUTTON_CLICKED, self.KeepFilter, self, "keep_regular")
+    -- self:AddCallback("keep_regular", ui_events.CHECK_BUTTON_RESET, self.KeepFilter, self, "keep_regular", false)
 
     self.keep_trash_cap = xml:InitStatic("stg_footer:depositall_frame:cap_check_keep_trash",
         self.stg_footer_depositall_d)
     self.keep_trash = xml:InitCheck("stg_footer:depositall_frame:check_keep_trash",
-    self.stg_footer_depositall_d)
+        self.stg_footer_depositall_d)
     self:Register(self.keep_trash, "keep_trash")
+    self:AddCallback("keep_trash", ui_events.BUTTON_CLICKED, self.KeepFilter, self, "keep_trash")
+    -- self:AddCallback("keep_trash", ui_events.CHECK_BUTTON_RESET, self.KeepFilter, self, "keep_trash", false)
 end
 
 function UIStorage:InitControls_Searchbox(xml)
@@ -558,10 +574,6 @@ end
 function UIStorage:Commons_Init()
     self.selected_cat = nil
     self.name_filter_str = nil
-
-    self.keep_favorite = false
-    self.keep_regular = false
-    self.keep_trash = false
 end
 
 -- Test bank mode
@@ -631,6 +643,10 @@ function UIStorage:Reset(force)
     self.actor_inv:SetScrollPos(actor_inv_pos)
     self.storage_inv:SetScrollPos(storage_inv_pos)
     -- self.searchbox:CaptureFocus(searchbox_focus or false)
+
+    self.keep_favorite:SetCheck(keep_favorite)
+    self.keep_regular:SetCheck(keep_regular)
+    self.keep_trash:SetCheck(keep_trash)
 end
 
 -- Refresh UNIMPLEMENTED update counters without reset.
@@ -719,13 +735,13 @@ function UIStorage:DepositAll()
 
         local mark = Marks[el.section] or mark_regular
 
-        if self.keep_favorite and mark == mark_favorite then
+        if keep_favorite and mark == mark_favorite then
             goto continue
         end
-        if self.keep_trash and mark == mark_trash then
+        if keep_trash and mark == mark_trash then
             goto continue
         end
-        if self.keep_regular and mark == mark_regular then
+        if keep_regular and mark == mark_regular then
             goto continue
         end
 
@@ -733,6 +749,16 @@ function UIStorage:DepositAll()
 
         ::continue::
     end
+end
+
+function UIStorage:KeepFilter(filter)
+    printf("KeepFilter call {%s}", filter)
+
+    keep_favorite = self.keep_favorite:GetCheck()
+    keep_regular = self.keep_regular:GetCheck()
+    keep_trash = self.keep_trash:GetCheck()
+
+    printf("KeepFilter results {favorite=%s, regular=%s, trash=%s}", keep_favorite, keep_regular, keep_trash)
 end
 
 function UIStorage:OnKeyboard(dik, keyboard_action)
