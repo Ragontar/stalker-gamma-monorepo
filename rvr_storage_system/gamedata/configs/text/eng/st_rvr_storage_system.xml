@@ -137,9 +137,22 @@
         * [SHIFT+F] sets focus on the search textbox.\n
         * [CTRL+SHIFT+F] sets focus on the search textbox and removes it's content.\n
         * [Enter] or unfocus search textbox to filter all items, with a respect to the selected category.\n
-        * [ALT+dLMB] marks item as favorite. Repeat to remove marking. [UNIMPLEMENTED]\n
-        * [SHIFT+ALT+dLMB] marks item as a trash. Repeat to remove marking. [UNIMPLEMENTED]\n
+        * [ALT+dLMB] marks item as favorite. Repeat to remove marking.\n
+        * [SHIFT+ALT+dLMB] marks item as a trash. Repeat to remove marking.\n
         </text>
+    </string>
+
+    <string id="rvr_ss_storage_footer_depositall_btn">
+        <text>Deposit All</text>
+    </string>
+    <string id="rvr_ss_storage_footer_keep_favorite">
+        <text>Keep favorite items</text>
+    </string>
+    <string id="rvr_ss_storage_footer_keep_regular">
+        <text>Keep regular items</text>
+    </string>
+    <string id="rvr_ss_storage_footer_keep_trash">
+        <text>Keep trash items</text>
     </string>
 
     <!-- <string id="st_c_consumables">

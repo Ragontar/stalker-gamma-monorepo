@@ -104,5 +104,35 @@
 		<hints x="20" y="40" width="400" height="94" stretch="1">
 			<text complex_mode="1" r="250" g="250" b="250" align="l" vert_align="c" font="letterica16">rvr_ss_storage_footer_hints</text>
 		</hints>
+
+		<depositall_frame x="840" y="10" width="100" height="144" stretch="1">
+			<texture></texture>
+
+			<depositall_btn x="0" y="0" width="100" height="30">
+				<texture>ui_button_ordinary</texture>
+				<text font="graffiti22" align="c" vert_align="c">rvr_ss_storage_footer_depositall_btn</text>
+			</depositall_btn>
+
+			<cap_check_keep_favorite x="28" y="40" width="32" height="20" stretch="1">
+				<text r="170" g="170" b="170" font="letterica16" align="l" vert_align="c">rvr_ss_storage_footer_keep_favorite</text>
+			</cap_check_keep_favorite>
+			<check_keep_favorite x="0" y="38" width="28" height="23" stretch="1">
+				<texture>ui_inGame2_checkbox</texture>
+			</check_keep_favorite>
+
+			<cap_check_keep_regular x="28" y="70" width="32" height="20" stretch="1">
+				<text r="170" g="170" b="170" font="letterica16" align="l" vert_align="c">rvr_ss_storage_footer_keep_regular</text>
+			</cap_check_keep_regular>
+			<check_keep_regular x="0" y="68" width="28" height="23" stretch="1">
+				<texture>ui_inGame2_checkbox</texture>
+			</check_keep_regular>
+
+			<cap_check_keep_trash x="28" y="100" width="32" height="20" stretch="1">
+				<text r="170" g="170" b="170" font="letterica16" align="l" vert_align="c">rvr_ss_storage_footer_keep_trash</text>
+			</cap_check_keep_trash>
+			<check_keep_trash x="0" y="98" width="28" height="23" stretch="1">
+				<texture>ui_inGame2_checkbox</texture>
+			</check_keep_trash>
+		</depositall_frame>
 	</stg_footer>
 </w>
