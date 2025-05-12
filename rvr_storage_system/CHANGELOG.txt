@@ -1,0 +1,2 @@
+0.2.x (Released xx.xx.xx):
+- Grenades moved to Ammunition category
