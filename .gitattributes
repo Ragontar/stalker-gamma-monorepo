@@ -1,2 +1,3 @@
 *.script gitlab-language=lua
+*.script linguist-language=lua
 rvr_storage_system/gamedata/configs/text/rus/*    text working-tree-encoding=windows-1252
