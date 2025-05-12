@@ -95,13 +95,13 @@ function GetCategories()
         {
             id = "c_weapons",
             display_name = "st_c_weapons",
-            kinds = { "w_sniper", "w_rifle", "w_smg", "w_shotgun", "w_pistol", "w_melee", "w_misc", "w_base", "w_explosive" },
+            kinds = { "w_sniper", "w_rifle", "w_smg", "w_shotgun", "w_pistol", "w_melee", "w_misc", "w_base" },
             opts = { hide_durability = false, hide_durability_exceptions = {} }
         },
         {
             id = "c_ammo",
             display_name = "st_c_ammo",
-            kinds = { "w_ammo" },
+            kinds = { "w_ammo", "w_explosive" },
             opts = { hide_durability = false, hide_durability_exceptions = {} }
         },
         {
