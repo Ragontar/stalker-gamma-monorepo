@@ -1,3 +1,6 @@
+0.3.2 (Released 13.05.2025):
+- MCM options state fix after save/load.
+
 0.3.1 (Released 13.05.2025):
 - Trash/favorite marks state fix: now it saves after save/load.
 

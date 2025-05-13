@@ -247,6 +247,8 @@ function init()
     end
     InitDefaultStorages()
     InitActiveStorages()
+    cfg = GetCfg()
+    categories = GetCategories()
 end
 
 function on_localization_change()
@@ -347,6 +349,8 @@ function load_state(m_data)
     keep_regular = m_data.rvr_storage_system_data.keep_regular or false
     keep_trash = m_data.rvr_storage_system_data.keep_trash or false
     Marks = m_data.rvr_storage_system_data.Marks or {}
+
+    cfg = GetCfg()
 end
 
 -----------------------------------------------------------------
