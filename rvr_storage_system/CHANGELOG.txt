@@ -1,4 +1,7 @@
 0.3.0 (Released 13.05.2025):
+- Trash/favorite marks state fix: now it saves after save/load.
+
+0.3.0 (Released 13.05.2025):
 - [FEATURE] Trash/Favorite system. Affects sorting and adds prefix to item's name: [T] and [F] respectively.
 - [FEATURE] Deposit All button. Respects filtered category and selected checkboxes with items to keep. (favorite, regular, trash)
 - Explosives moved to Ammunition category
