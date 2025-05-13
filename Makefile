@@ -1,4 +1,4 @@
-RVR_SS_VER=0.3.0
+RVR_SS_VER=0.3.1
 
 release_rvr_ss:
 	mkdir -p _release

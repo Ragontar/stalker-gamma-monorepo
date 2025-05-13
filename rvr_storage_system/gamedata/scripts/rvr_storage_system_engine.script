@@ -247,7 +247,6 @@ function init()
     end
     InitDefaultStorages()
     InitActiveStorages()
-    InitMarks()
 end
 
 function on_localization_change()
@@ -332,6 +331,7 @@ function save_state(m_data)
         keep_favorite = keep_favorite,
         keep_regular = keep_regular,
         keep_trash = keep_trash,
+        Marks = Marks,
     }
 
     m_data.rvr_storage_system_data = rvr_storage_system_data
@@ -346,6 +346,7 @@ function load_state(m_data)
     keep_favorite = m_data.rvr_storage_system_data.keep_favorite or false
     keep_regular = m_data.rvr_storage_system_data.keep_regular or false
     keep_trash = m_data.rvr_storage_system_data.keep_trash or false
+    Marks = m_data.rvr_storage_system_data.Marks or {}
 end
 
 -----------------------------------------------------------------
@@ -1535,10 +1536,6 @@ function InitActiveStorages()
         printf("initialized ActiveStorage id=" ..
             tostring(storage.id) .. " val=" .. tostring(ActiveStorages[storage.id]:GetContent()))
     end
-end
-
-function InitMarks()
-    Marks = RVRData.Marks or {}
 end
 
 function CalculatePutOrGetAmount(section, pickAmount)
