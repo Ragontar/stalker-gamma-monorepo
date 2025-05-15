@@ -11,6 +11,8 @@ function on_game_start()
     -- -- RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
     -- RegisterScriptCallback("on_option_change", on_option_change)
     -- RegisterScriptCallback("on_localization_change", on_localization_change)
+
+    RegisterScriptCallback("npc_on_death_callback", npc_on_death_callback)
 end
 
 ---@class GAME_STATE
@@ -51,6 +53,72 @@ Stats = {
     scavenger = 0,
     quests = 0
 }
+
+---@param self Stats
+---@param stat_name string
+---@param val integer
+Stats.inc = function(self, stat_name, val)
+    self[stat_name] = self[stat_name] or 0
+    self[stat_name] = self[stat_name] + val
+
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, stat_name .. " inc by " .. val .. " = " .. tostring(self[stat_name]), nil, nil,
+            30000)
+    end
+end
+
+---@param self Stats
+---@param stat_name string
+---@param val integer
+Stats.dec = function(self, stat_name, val)
+    self[stat_name] = self[stat_name] or 0
+    self[stat_name] = math.max(self[stat_name] - val, 0)
+
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, stat_name .. " dec by " .. val .. " = " .. tostring(self[stat_name]), nil, nil,
+            30000)
+    end
+end
+
+Stats.man_hunter_inc = function(self, val)
+    self:inc("man_hunter", val)
+end
+
+Stats.man_hunter_dec = function(self, val)
+    self:dec("man_hunter", val)
+end
+
+Stats.mutant_hunter_inc = function(self, val)
+    self:inc("mutant_hunter", val)
+end
+
+Stats.mutant_hunter_dec = function(self, val)
+    self:dec("mutant_hunter", val)
+end
+
+Stats.af_hunter_inc = function(self, val)
+    self:inc("af_hunter", val)
+end
+
+Stats.af_hunter_dec = function(self, val)
+    self:dec("af_hunter", val)
+end
+
+Stats.scavenger_inc = function(self, val)
+    self:inc("scavenger", val)
+end
+
+Stats.scavenger_dec = function(self, val)
+    self:dec("scavenger", val)
+end
+
+Stats.quests_inc = function(self, val)
+    self:inc("quests", val)
+end
+
+Stats.quests_dec = function(self, val)
+    self:dec("quests", val)
+end
 
 ---@param state GAME_STATE
 Stats.from_game_state = function(self, state)
@@ -101,4 +169,31 @@ function actor_on_first_update()
     if Cfg().dev_debug_mode then
         news_manager.send_tip(db.actor, "current stats: " .. Stats:get_current_stats_str(), nil, nil, 30000)
     end
+end
+
+-----
+--- Callbacks
+-----
+
+function npc_on_death_callback(victim, killer)
+    -- Return if the actor is not the killer.
+    if not (killer and victim) then return end
+    local id = killer:id()
+    if id ~= AC_ID then return end
+
+    local killer_faction = character_community(killer)
+    local victim_faction = character_community(victim)
+
+    -- local stat
+    -- if (xr_conditions.is_factions_friends(nil, nil, { killer_faction, victim_faction })) then
+    --     stat = "killed_stalkers_f"
+    -- elseif (xr_conditions.is_factions_enemies(nil, nil, { killer_faction, victim_faction })) then
+    --     stat = "killed_stalkers_e"
+    -- else
+    --     stat = "killed_stalkers_n"
+    -- end
+
+    -- todo check rank, location, faction
+
+    Stats:man_hunter_inc(1)
 end
