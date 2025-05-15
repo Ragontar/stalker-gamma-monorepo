@@ -1,6 +1,4 @@
 function on_game_start()
-    cfg = GetCfg()
-
     RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
     -- RegisterScriptCallback("on_key_press", on_key_press)
     -- RegisterScriptCallback("on_key_release", on_key_release)
@@ -26,20 +24,26 @@ GAME_STATE = {
     }
 }
 
----@return table cfg
-function GetCfg()
+---@class CONFIG
+---@field dev_debug_mode boolean
+
+---@return CONFIG
+function Cfg()
     return {
         dev_debug_mode = true
     }
 end
-
-cfg = GetCfg()
 
 -----
 --- Stats storage
 -----
 
 ---@class Stats
+---@field man_hunter integer
+---@field mutant_hunter integer
+---@field af_hunter integer
+---@field scavenger integer
+---@field quests integer
 Stats = {
     man_hunter = 0,
     mutant_hunter = 0,
@@ -49,12 +53,26 @@ Stats = {
 }
 
 ---@param state GAME_STATE
-Stats.from_game_state = function (self, state)
+Stats.from_game_state = function(self, state)
     self.man_hunter = state.stats_state.man_hunter
     self.mutant_hunter = state.stats_state.mutant_hunter
     self.af_hunter = state.stats_state.af_hunter
     self.scavenger = state.stats_state.scavenger
     self.quests = state.stats_state.quests
+
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, "Progression Overhaul initialized", nil, nil, 30000)
+    end
+end
+
+Stats.get_current_stats_str = function(self)
+    return string.format("man_hunter=%s, mutant_hunter=%s, af_hunter=%s, scavenger=%s, quests=%s",
+        tostring(self.man_hunter),
+        tostring(self.mutant_hunter),
+        tostring(self.af_hunter),
+        tostring(self.scavenger),
+        tostring(self.quests)
+    )
 end
 
 -----
@@ -78,11 +96,9 @@ function load_state(m_data)
 end
 
 function actor_on_first_update()
-    cfg = GetCfg()
     Stats:from_game_state(GAME_STATE)
 
-    if cfg.dev_debug_mode then
-        news_manager.send_tip(db.actor, "Progression Overhaul initialized", nil, nil, 30000)
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, "current stats: " .. Stats:get_current_stats_str(), nil, nil, 30000)
     end
-
 end
