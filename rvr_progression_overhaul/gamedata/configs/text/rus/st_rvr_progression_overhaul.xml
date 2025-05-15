@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="windows-1251"?>
+
+<string_table>
+    <!-- MCM section -->
+    <string id="ui_mcm_menu_rvr_progression_overhaul">
+        <text>Progression Overhaul by rvr</text>
+    </string>
+</string_table>
