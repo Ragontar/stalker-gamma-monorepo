@@ -1,0 +1,88 @@
+function on_game_start()
+    cfg = GetCfg()
+
+    RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+    -- RegisterScriptCallback("on_key_press", on_key_press)
+    -- RegisterScriptCallback("on_key_release", on_key_release)
+    RegisterScriptCallback("save_state", save_state)
+    RegisterScriptCallback("load_state", load_state)
+    -- -- RegisterScriptCallback("actor_item_to_ruck", actor_item_to_ruck)
+    -- RegisterScriptCallback("on_actor_inventory_update_finished", on_actor_inventory_update_finished)
+    -- RegisterScriptCallback("on_storage_inventory_update_finished", on_storage_inventory_update_finished)
+    -- RegisterScriptCallback("rvr_storage_actor_on_stash_create", rvr_storage_actor_on_stash_create)
+    -- -- RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
+    -- RegisterScriptCallback("on_option_change", on_option_change)
+    -- RegisterScriptCallback("on_localization_change", on_localization_change)
+end
+
+---@class GAME_STATE
+GAME_STATE = {
+    stats_state = {
+        man_hunter = 0,
+        mutant_hunter = 0,
+        af_hunter = 0,
+        scavenger = 0,
+        quests = 0
+    }
+}
+
+---@return table cfg
+function GetCfg()
+    return {
+        dev_debug_mode = true
+    }
+end
+
+cfg = GetCfg()
+
+-----
+--- Stats storage
+-----
+
+---@class Stats
+Stats = {
+    man_hunter = 0,
+    mutant_hunter = 0,
+    af_hunter = 0,
+    scavenger = 0,
+    quests = 0
+}
+
+---@param state GAME_STATE
+Stats.from_game_state = function (self, state)
+    self.man_hunter = state.stats_state.man_hunter
+    self.mutant_hunter = state.stats_state.mutant_hunter
+    self.af_hunter = state.stats_state.af_hunter
+    self.scavenger = state.stats_state.scavenger
+    self.quests = state.stats_state.quests
+end
+
+-----
+--- Save/load state
+-----
+
+function save_state(m_data)
+    local rvr_progression_overhaul_data = {
+        GAME_STATE = GAME_STATE,
+    }
+
+    m_data.rvr_progression_overhaul_data = rvr_progression_overhaul_data
+end
+
+function load_state(m_data)
+    if not m_data.rvr_progression_overhaul_data then
+        return
+    end
+
+    GAME_STATE = m_data.rvr_progression_overhaul_data.GAME_STATE
+end
+
+function actor_on_first_update()
+    cfg = GetCfg()
+    Stats:from_game_state(GAME_STATE)
+
+    if cfg.dev_debug_mode then
+        news_manager.send_tip(db.actor, "Progression Overhaul initialized", nil, nil, 30000)
+    end
+
+end
