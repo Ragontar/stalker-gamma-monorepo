@@ -13,6 +13,9 @@ function on_game_start()
     -- RegisterScriptCallback("on_localization_change", on_localization_change)
 
     RegisterScriptCallback("npc_on_death_callback", npc_on_death_callback)
+    RegisterScriptCallback("monster_on_death_callback", monster_on_death_callback)
+    RegisterScriptCallback("actor_on_item_take", actor_on_item_take)
+    RegisterScriptCallback("actor_on_task_callback", actor_on_task_callback)
 end
 
 ---@class GAME_STATE
@@ -133,6 +136,15 @@ Stats.from_game_state = function(self, state)
     end
 end
 
+---@param state GAME_STATE
+Stats.update_game_state = function(self, state)
+    state.stats_state.man_hunter = self.man_hunter
+    state.stats_state.mutant_hunter = self.mutant_hunter
+    state.stats_state.af_hunter = self.af_hunter
+    state.stats_state.scavenger = self.scavenger
+    state.stats_state.quests = self.quests
+end
+
 Stats.get_current_stats_str = function(self)
     return string.format("man_hunter=%s, mutant_hunter=%s, af_hunter=%s, scavenger=%s, quests=%s",
         tostring(self.man_hunter),
@@ -148,6 +160,8 @@ end
 -----
 
 function save_state(m_data)
+    Stats:update_game_state(GAME_STATE)
+
     local rvr_progression_overhaul_data = {
         GAME_STATE = GAME_STATE,
     }
@@ -178,8 +192,7 @@ end
 function npc_on_death_callback(victim, killer)
     -- Return if the actor is not the killer.
     if not (killer and victim) then return end
-    local id = killer:id()
-    if id ~= AC_ID then return end
+    if not killer:id() == AC_ID then return end
 
     local killer_faction = character_community(killer)
     local victim_faction = character_community(victim)
@@ -196,4 +209,59 @@ function npc_on_death_callback(victim, killer)
     -- todo check rank, location, faction
 
     Stats:man_hunter_inc(1)
+end
+
+function monster_on_death_callback(victim, killer)
+    if not (killer and victim) then return end
+    if not killer:id() == AC_ID then return end
+
+    -- todo check type, diff, etc
+    -- news_manager.send_tip(db.actor, "monster_on_death_callback", nil, nil, 30000)
+    Stats:mutant_hunter_inc(1)
+end
+
+function actor_on_item_take(item)
+    if not (item and IsArtefact(item)) then return end
+    news_manager.send_tip(db.actor, "actor_on_item_take", nil, nil, 30000)
+
+    -- todo seems exploitable and useless, af turning in for pts is better
+
+    -- -- Hack to prevent player from exploting Artefacts Containers (gaining rank by recieving artefacts)
+    -- if _G.ARTY_FROM_CONT then
+    -- 	_G.ARTY_FROM_CONT = nil
+    -- 	return
+    -- end
+
+    -- local artefact = item:get_artefact()
+    -- local anomaly = bind_anomaly_zone.parent_zones_by_artefact_id[item:id()]
+    -- -- Artefacts found counter incrementation.
+    -- -- Checks to make sure artefact id hasn't already been logged.
+    -- if (artefact) then
+    -- 	artefact:FollowByPath("NULL", 0, vector():set(500,500,500))
+    -- 	if not (actor_artefacts[item:id()]) then
+    -- 		actor_artefacts[item:id()] = true
+    -- 		increment_statistic("artefacts_found")
+    -- 	else
+    -- 		return
+    -- 	end
+    -- end
+    -- -- Artefacts detected counter incrementation.
+    -- -- Requires the artefact be associated with an anomaly.
+    -- if (artefact and anomaly) then
+    -- 	anomaly:on_artefact_take(item)
+    -- 	increment_statistic("artefacts_detected")
+    -- else
+    -- 	bind_anomaly_zone.artefact_ways_by_id[item:id()] = nil
+    -- end
+end
+
+function actor_on_task_callback(binder, _task, _state)
+    if _state ~= task.fail then
+        if _state == task.completed then
+            Stats:quests_inc(1)
+        else --idk why repeatable tasks considered not completed....
+            -- todo check rewards
+            Stats:quests_inc(1)
+        end
+    end
 end
