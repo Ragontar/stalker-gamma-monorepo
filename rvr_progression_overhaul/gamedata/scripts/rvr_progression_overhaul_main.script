@@ -331,4 +331,3 @@ end
 function get_location_multiplier() -- todo
     return 1
 end
-mutant_type_bonusesmutant_type_bonuses
