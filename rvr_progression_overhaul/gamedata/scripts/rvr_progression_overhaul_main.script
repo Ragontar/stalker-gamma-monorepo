@@ -39,6 +39,43 @@ function Cfg()
     }
 end
 
+mutant_tier_by_clsid = {
+    [clsid.bloodsucker_s]     = 2,
+    [clsid.boar_s]            = 1,
+    [clsid.burer_s]           = 4,
+    [clsid.cat_s]             = 1,
+    [clsid.chimera_s]         = 3,
+    [clsid.controller_s]      = 4,
+    [clsid.dog_s]             = 1,
+    [clsid.flesh_s]           = 1,
+    [clsid.fracture_s]        = 2,
+    [clsid.gigant_s]          = 3,
+    [clsid.poltergeist_s]     = 4,
+    [clsid.pseudodog_s]       = 1,
+    [clsid.psy_dog_phantom_s] = 4,
+    [clsid.psy_dog_s]         = 4,
+    [clsid.rat_s]             = 0,
+    [clsid.snork_s]           = 2,
+    [clsid.tushkano_s]        = 0,
+    [clsid.zombie_s]          = 1
+}
+
+local faction_mults = {
+    ["stalker"]  = 1,
+    ["monolith"] = 1.5,
+    ["csky"]     = 1.1,
+    ["army"]     = 1.1,
+    ["killer"]   = 1.3,
+    ["ecolog"]   = 0.9,
+    ["dolg"]     = 1.1,
+    ["freedom"]  = 1.1,
+    ["bandit"]   = 1,
+    ["greh"]     = 1.8,
+    ["isg"]      = 1.7,
+    ["renegade"] = 1,
+    ["zombied"]  = 0.7,
+}
+
 -----
 --- Stats storage
 -----
@@ -194,30 +231,28 @@ function npc_on_death_callback(victim, killer)
     if not (killer and victim) then return end
     if not killer:id() == AC_ID then return end
 
-    local killer_faction = character_community(killer)
     local victim_faction = character_community(victim)
 
-    -- local stat
-    -- if (xr_conditions.is_factions_friends(nil, nil, { killer_faction, victim_faction })) then
-    --     stat = "killed_stalkers_f"
-    -- elseif (xr_conditions.is_factions_enemies(nil, nil, { killer_faction, victim_faction })) then
-    --     stat = "killed_stalkers_e"
-    -- else
-    --     stat = "killed_stalkers_n"
-    -- end
+    local base = 10
+    local rank_bonus = math.floor(victim:rank() / 1000)
+    local faction_multiplier = get_faction_multiplier(victim_faction)
+    local location_multiplier = get_location_multiplier()
+    local multiplier = faction_multiplier * location_multiplier
 
-    -- todo check rank, location, faction
-
-    Stats:man_hunter_inc(1)
+    Stats:man_hunter_inc(multiplier * (base + rank_bonus))
 end
 
 function monster_on_death_callback(victim, killer)
     if not (killer and victim) then return end
     if not killer:id() == AC_ID then return end
 
-    -- todo check type, diff, etc
-    -- news_manager.send_tip(db.actor, "monster_on_death_callback", nil, nil, 30000)
-    Stats:mutant_hunter_inc(1)
+    local base = 10
+    local type_bonus = get_monster_type_bonus(section) -- todo
+    local health_multiplier = get_monster_health_multiplier(section)
+    local location_multiplier = get_location_multiplier()
+    local multiplier = health_multiplier * location_multiplier
+
+    Stats:mutant_hunter_inc(multiplier * (base + type_bonus))
 end
 
 function actor_on_item_take(item)
@@ -225,43 +260,48 @@ function actor_on_item_take(item)
     news_manager.send_tip(db.actor, "actor_on_item_take", nil, nil, 30000)
 
     -- todo seems exploitable and useless, af turning in for pts is better
-
-    -- -- Hack to prevent player from exploting Artefacts Containers (gaining rank by recieving artefacts)
-    -- if _G.ARTY_FROM_CONT then
-    -- 	_G.ARTY_FROM_CONT = nil
-    -- 	return
-    -- end
-
-    -- local artefact = item:get_artefact()
-    -- local anomaly = bind_anomaly_zone.parent_zones_by_artefact_id[item:id()]
-    -- -- Artefacts found counter incrementation.
-    -- -- Checks to make sure artefact id hasn't already been logged.
-    -- if (artefact) then
-    -- 	artefact:FollowByPath("NULL", 0, vector():set(500,500,500))
-    -- 	if not (actor_artefacts[item:id()]) then
-    -- 		actor_artefacts[item:id()] = true
-    -- 		increment_statistic("artefacts_found")
-    -- 	else
-    -- 		return
-    -- 	end
-    -- end
-    -- -- Artefacts detected counter incrementation.
-    -- -- Requires the artefact be associated with an anomaly.
-    -- if (artefact and anomaly) then
-    -- 	anomaly:on_artefact_take(item)
-    -- 	increment_statistic("artefacts_detected")
-    -- else
-    -- 	bind_anomaly_zone.artefact_ways_by_id[item:id()] = nil
-    -- end
 end
 
 function actor_on_task_callback(binder, _task, _state)
-    if _state ~= task.fail then
-        if _state == task.completed then
-            Stats:quests_inc(1)
-        else --idk why repeatable tasks considered not completed....
-            -- todo check rewards
-            Stats:quests_inc(1)
-        end
+    if _state == task.fail then
+        return
     end
+
+    local base = 100
+    local bonus = 0
+    local location_multiplier = get_location_multiplier()
+    local multiplier = location_multiplier
+
+    local inc_val = multiplier * (base + bonus)
+
+    Stats:quests_inc(inc_val)
+
+    -- if _state == task.completed then
+    --     Stats:quests_inc(inc_val)
+    -- else     --idk why repeatable tasks considered not completed....
+    --     -- todo check rewards
+    --     Stats:quests_inc(inc_val)
+    -- end
+end
+
+function get_faction_multiplier(faction)
+    local mult = faction_mults[faction] or 1
+
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, string.format("faction=%s, mult=%.2f", tostring(faction), mult), nil, nil, 30000)
+    end
+
+    return mult
+end
+
+function get_monster_type_bonus(section) -- todo
+    return 1
+end
+
+function get_monster_health_multiplier(section) -- todo
+    return 1
+end
+
+function get_location_multiplier() -- todo
+    return 1
 end
