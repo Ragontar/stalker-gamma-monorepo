@@ -39,28 +39,37 @@ function Cfg()
     }
 end
 
-mutant_tier_by_clsid = {
-    [clsid.bloodsucker_s]     = 2,
-    [clsid.boar_s]            = 1,
-    [clsid.burer_s]           = 4,
-    [clsid.cat_s]             = 1,
-    [clsid.chimera_s]         = 3,
-    [clsid.controller_s]      = 4,
-    [clsid.dog_s]             = 1,
-    [clsid.flesh_s]           = 1,
-    [clsid.fracture_s]        = 2,
-    [clsid.gigant_s]          = 3,
-    [clsid.poltergeist_s]     = 4,
-    [clsid.pseudodog_s]       = 1,
-    [clsid.psy_dog_phantom_s] = 4,
-    [clsid.psy_dog_s]         = 4,
-    [clsid.rat_s]             = 0,
-    [clsid.snork_s]           = 2,
-    [clsid.tushkano_s]        = 0,
-    [clsid.zombie_s]          = 1
+mutant_type_bonuses = {
+    ["bibliotekar"] = 150,
+    ["bloodsucker"] = 75,
+    ["boar"] = 40,
+    ["borya"] = 80,
+    ["burer"] = 80,
+    ["cat"] = 30,
+    ["chimera"] = 150,
+    ["controller"] = 120,
+    ["crow"] = 2,
+    ["dog"] = 20,
+    ["flesh"] = 30,
+    ["fracture"] = 40,
+    ["giant"] = 150,
+    ["gigant_jumper"] = 160,
+    ["karlik"] = 70,
+    ["lurker"] = 80,
+    ["poltergeist"] = 50,
+    ["poltergeist_build_kea"] = 60,
+    ["pseudodog"] = 55,
+    ["psysucker"] = 95,
+    ["rat"] = 1,
+    ["rotan"] = 1,
+    ["snork"] = 60,
+    ["tushkano"] = 20,
+    ["zombie"] = 35,
+    ["person"] = 0,
+    ["phantom"] = 0,
 }
 
-local faction_mults = {
+faction_mults = {
     ["stalker"]  = 1,
     ["monolith"] = 1.5,
     ["csky"]     = 1.1,
@@ -246,6 +255,8 @@ function monster_on_death_callback(victim, killer)
     if not (killer and victim) then return end
     if not killer:id() == AC_ID then return end
 
+    local section = victim:section() or ""
+
     local base = 10
     local type_bonus = get_monster_type_bonus(section) -- todo
     local health_multiplier = get_monster_health_multiplier(section)
@@ -295,6 +306,21 @@ function get_faction_multiplier(faction)
 end
 
 function get_monster_type_bonus(section) -- todo
+    if not section then return 0 end
+
+    printf("get_monster_type_bonus sec=%s", section)
+
+    for pref, mult in pairs(mutant_type_bonuses) do
+        if string.starts(section, pref) then
+            if Cfg().dev_debug_mode then
+                news_manager.send_tip(db.actor, string.format("section=%s, mult=%.2f", tostring(section), mult), nil, nil,
+                    30000)
+            end
+
+            return mult
+        end
+    end
+
     return 1
 end
 
@@ -305,3 +331,4 @@ end
 function get_location_multiplier() -- todo
     return 1
 end
+mutant_type_bonusesmutant_type_bonuses
