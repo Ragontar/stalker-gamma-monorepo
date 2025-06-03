@@ -1,0 +1,333 @@
+function on_game_start()
+    RegisterScriptCallback("actor_on_first_update", actor_on_first_update)
+    -- RegisterScriptCallback("on_key_press", on_key_press)
+    -- RegisterScriptCallback("on_key_release", on_key_release)
+    RegisterScriptCallback("save_state", save_state)
+    RegisterScriptCallback("load_state", load_state)
+    -- -- RegisterScriptCallback("actor_item_to_ruck", actor_item_to_ruck)
+    -- RegisterScriptCallback("on_actor_inventory_update_finished", on_actor_inventory_update_finished)
+    -- RegisterScriptCallback("on_storage_inventory_update_finished", on_storage_inventory_update_finished)
+    -- RegisterScriptCallback("rvr_storage_actor_on_stash_create", rvr_storage_actor_on_stash_create)
+    -- -- RegisterScriptCallback("physic_object_on_use_callback", physic_object_on_use_callback)
+    -- RegisterScriptCallback("on_option_change", on_option_change)
+    -- RegisterScriptCallback("on_localization_change", on_localization_change)
+
+    RegisterScriptCallback("npc_on_death_callback", npc_on_death_callback)
+    RegisterScriptCallback("monster_on_death_callback", monster_on_death_callback)
+    RegisterScriptCallback("actor_on_item_take", actor_on_item_take)
+    RegisterScriptCallback("actor_on_task_callback", actor_on_task_callback)
+end
+
+---@class GAME_STATE
+GAME_STATE = {
+    stats_state = {
+        man_hunter = 0,
+        mutant_hunter = 0,
+        af_hunter = 0,
+        scavenger = 0,
+        quests = 0
+    }
+}
+
+---@class CONFIG
+---@field dev_debug_mode boolean
+
+---@return CONFIG
+function Cfg()
+    return {
+        dev_debug_mode = true
+    }
+end
+
+mutant_type_bonuses = {
+    ["bibliotekar"] = 150,
+    ["bloodsucker"] = 75,
+    ["boar"] = 40,
+    ["borya"] = 80,
+    ["burer"] = 80,
+    ["cat"] = 30,
+    ["chimera"] = 150,
+    ["controller"] = 120,
+    ["crow"] = 2,
+    ["dog"] = 20,
+    ["flesh"] = 30,
+    ["fracture"] = 40,
+    ["giant"] = 150,
+    ["gigant_jumper"] = 160,
+    ["karlik"] = 70,
+    ["lurker"] = 80,
+    ["poltergeist"] = 50,
+    ["poltergeist_build_kea"] = 60,
+    ["pseudodog"] = 55,
+    ["psysucker"] = 95,
+    ["rat"] = 1,
+    ["rotan"] = 1,
+    ["snork"] = 60,
+    ["tushkano"] = 20,
+    ["zombie"] = 35,
+    ["person"] = 0,
+    ["phantom"] = 0,
+}
+
+faction_mults = {
+    ["stalker"]  = 1,
+    ["monolith"] = 1.5,
+    ["csky"]     = 1.1,
+    ["army"]     = 1.1,
+    ["killer"]   = 1.3,
+    ["ecolog"]   = 0.9,
+    ["dolg"]     = 1.1,
+    ["freedom"]  = 1.1,
+    ["bandit"]   = 1,
+    ["greh"]     = 1.8,
+    ["isg"]      = 1.7,
+    ["renegade"] = 1,
+    ["zombied"]  = 0.7,
+}
+
+-----
+--- Stats storage
+-----
+
+---@class Stats
+---@field man_hunter integer
+---@field mutant_hunter integer
+---@field af_hunter integer
+---@field scavenger integer
+---@field quests integer
+Stats = {
+    man_hunter = 0,
+    mutant_hunter = 0,
+    af_hunter = 0,
+    scavenger = 0,
+    quests = 0
+}
+
+---@param self Stats
+---@param stat_name string
+---@param val integer
+Stats.inc = function(self, stat_name, val)
+    self[stat_name] = self[stat_name] or 0
+    self[stat_name] = self[stat_name] + val
+
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, stat_name .. " inc by " .. val .. " = " .. self[stat_name], nil, nil,
+            30000)
+    end
+end
+
+---@param self Stats
+---@param stat_name string
+---@param val integer
+Stats.dec = function(self, stat_name, val)
+    self[stat_name] = self[stat_name] or 0
+    self[stat_name] = math.max(self[stat_name] - val, 0)
+
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, stat_name .. " dec by " .. val .. " = " .. self[stat_name], nil, nil,
+            30000)
+    end
+end
+
+Stats.man_hunter_inc = function(self, val)
+    self:inc("man_hunter", val)
+end
+
+Stats.man_hunter_dec = function(self, val)
+    self:dec("man_hunter", val)
+end
+
+Stats.mutant_hunter_inc = function(self, val)
+    self:inc("mutant_hunter", val)
+end
+
+Stats.mutant_hunter_dec = function(self, val)
+    self:dec("mutant_hunter", val)
+end
+
+Stats.af_hunter_inc = function(self, val)
+    self:inc("af_hunter", val)
+end
+
+Stats.af_hunter_dec = function(self, val)
+    self:dec("af_hunter", val)
+end
+
+Stats.scavenger_inc = function(self, val)
+    self:inc("scavenger", val)
+end
+
+Stats.scavenger_dec = function(self, val)
+    self:dec("scavenger", val)
+end
+
+Stats.quests_inc = function(self, val)
+    self:inc("quests", val)
+end
+
+Stats.quests_dec = function(self, val)
+    self:dec("quests", val)
+end
+
+---@param state GAME_STATE
+Stats.from_game_state = function(self, state)
+    self.man_hunter = state.stats_state.man_hunter
+    self.mutant_hunter = state.stats_state.mutant_hunter
+    self.af_hunter = state.stats_state.af_hunter
+    self.scavenger = state.stats_state.scavenger
+    self.quests = state.stats_state.quests
+
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, "Progression Overhaul initialized", nil, nil, 30000)
+    end
+end
+
+---@param state GAME_STATE
+Stats.update_game_state = function(self, state)
+    state.stats_state.man_hunter = self.man_hunter
+    state.stats_state.mutant_hunter = self.mutant_hunter
+    state.stats_state.af_hunter = self.af_hunter
+    state.stats_state.scavenger = self.scavenger
+    state.stats_state.quests = self.quests
+end
+
+Stats.get_current_stats_str = function(self)
+    return string.format("man_hunter=%s, mutant_hunter=%s, af_hunter=%s, scavenger=%s, quests=%s",
+        tostring(self.man_hunter),
+        tostring(self.mutant_hunter),
+        tostring(self.af_hunter),
+        tostring(self.scavenger),
+        tostring(self.quests)
+    )
+end
+
+-----
+--- Save/load state
+-----
+
+function save_state(m_data)
+    Stats:update_game_state(GAME_STATE)
+
+    local rvr_progression_overhaul_data = {
+        GAME_STATE = GAME_STATE,
+    }
+
+    m_data.rvr_progression_overhaul_data = rvr_progression_overhaul_data
+end
+
+function load_state(m_data)
+    if not m_data.rvr_progression_overhaul_data then
+        return
+    end
+
+    GAME_STATE = m_data.rvr_progression_overhaul_data.GAME_STATE
+end
+
+function actor_on_first_update()
+    Stats:from_game_state(GAME_STATE)
+
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, "current stats: " .. Stats:get_current_stats_str(), nil, nil, 30000)
+    end
+end
+
+-----
+--- Callbacks
+-----
+
+function npc_on_death_callback(victim, killer)
+    -- Return if the actor is not the killer.
+    if not (killer and victim) then return end
+    if not killer:id() == AC_ID then return end
+
+    local victim_faction = character_community(victim)
+
+    local base = 10
+    local rank_bonus = math.floor(victim:rank() / 1000)
+    local faction_multiplier = get_faction_multiplier(victim_faction)
+    local location_multiplier = get_location_multiplier()
+    local multiplier = faction_multiplier * location_multiplier
+
+    Stats:man_hunter_inc(multiplier * (base + rank_bonus))
+end
+
+function monster_on_death_callback(victim, killer)
+    if not (killer and victim) then return end
+    if not killer:id() == AC_ID then return end
+
+    local section = victim:section() or ""
+
+    local base = 10
+    local type_bonus = get_monster_type_bonus(section) -- todo
+    local health_multiplier = get_monster_health_multiplier(section)
+    local location_multiplier = get_location_multiplier()
+    local multiplier = health_multiplier * location_multiplier
+
+    Stats:mutant_hunter_inc(multiplier * (base + type_bonus))
+end
+
+function actor_on_item_take(item)
+    if not (item and IsArtefact(item)) then return end
+    news_manager.send_tip(db.actor, "actor_on_item_take", nil, nil, 30000)
+
+    -- todo seems exploitable and useless, af turning in for pts is better
+end
+
+function actor_on_task_callback(binder, _task, _state)
+    if _state == task.fail then
+        return
+    end
+
+    local base = 100
+    local bonus = 0
+    local location_multiplier = get_location_multiplier()
+    local multiplier = location_multiplier
+
+    local inc_val = multiplier * (base + bonus)
+
+    Stats:quests_inc(inc_val)
+
+    -- if _state == task.completed then
+    --     Stats:quests_inc(inc_val)
+    -- else     --idk why repeatable tasks considered not completed....
+    --     -- todo check rewards
+    --     Stats:quests_inc(inc_val)
+    -- end
+end
+
+function get_faction_multiplier(faction)
+    local mult = faction_mults[faction] or 1
+
+    if Cfg().dev_debug_mode then
+        news_manager.send_tip(db.actor, string.format("faction=%s, mult=%.2f", tostring(faction), mult), nil, nil, 30000)
+    end
+
+    return mult
+end
+
+function get_monster_type_bonus(section) -- todo
+    if not section then return 0 end
+
+    printf("get_monster_type_bonus sec=%s", section)
+
+    for pref, mult in pairs(mutant_type_bonuses) do
+        if string.starts(section, pref) then
+            if Cfg().dev_debug_mode then
+                news_manager.send_tip(db.actor, string.format("section=%s, mult=%.2f", tostring(section), mult), nil, nil,
+                    30000)
+            end
+
+            return mult
+        end
+    end
+
+    return 1
+end
+
+function get_monster_health_multiplier(section) -- todo
+    return 1
+end
+
+function get_location_multiplier() -- todo
+    return 1
+end
