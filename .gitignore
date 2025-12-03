@@ -1,8 +1,10 @@
 .vscode
 _unpacked
 _release
+_ignored
 Enjoy Cigarettes
 *.zip
 335- Auto-Stacking Items - Zatura
 110- SortingPlus - RavenAscendant
 Revised_Ammo_Maker_Updated
+*.code-workspace
